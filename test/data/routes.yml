@@ -1,0 +1,36 @@
+--- # file: ./config/default_routes.yml
+routes:
+  "/f{forum_id}/":
+    to: forum.list
+    params:
+      forum_id: /\d+/
+  "/f{forum_id}/index{page}.html":
+    to: forum.list
+    params:
+      forum_id: /\d+/
+      page: /[2-9]|[1-9]\d+/
+  "/f{forum_id}/thread{thread_id}.html":
+    to: forum.threads.show
+    params:
+      forum_id: /\d+/
+      thread_id: /\d+/
+  "/{year}/{month}/{post_id}.html":
+    to: blog.posts.show
+    params:
+      year: /\d{4}/
+      month: /\d{2}/
+      post_id: /\d+/
+
+direct:
+  - forums.threads.show
+
+redirect:
+  "/f{forum_id}/t{thread_id}":
+    to: [ 301, "/f{forum_id}/thread{thread_id}.html" ]
+    params:
+      forum_id: /\d+/
+      thread_id: /\d+/
+
+mount:
+  /blog:
+    from: blog

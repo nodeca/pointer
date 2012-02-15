@@ -4,15 +4,14 @@ nrouter
 Server/Client router for nodeca:
 [[https://github.com/nodeca/nodeca/blob/master/docs/nodeca-technical/router.md]]
 
-```
-router.addRoute("/threads/{thread_id}(-{page}).html", {
-  thread_id: /\d+/
-  page: {
-    match: /\d+/
-    default: 1
-  }
-}, nodeca.server.forum.threads.show);
-```
+    router.addRoute("/threads/{thread_id}(-{page}).html", {
+      thread_id: /\d+/
+      page: {
+        match: /\d+/
+        default: 1
+      }
+    }, nodeca.server.forum.threads.show);
+
 
 Syntax of routes
 ----------------

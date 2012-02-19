@@ -7,8 +7,8 @@ pattern
   ;
 
 route
-  : parts { $$ = [$1]; }
-  | "" { $$ = '2'; }
+  : parts { $$ = $1; }
+  | "" { $$ = []; }
   ;
 
 parts
@@ -17,6 +17,7 @@ parts
   ;
 
 part
-  : OPEN_PARAM PARAM_NAME CLOSE_PARAM { $$ = new yy.ParamNode($2); }
-  | CONTENT { $$ = new yy.StringNode($1); }
+  : OPEN_GROUP parts CLOSE { $$ = new yy.OptionalGroupNode($2); }
+  | OPEN_PARAM PARAM_NAME CLOSE { $$ = new yy.ParamNode($2); }
+  | STRING { $$ = new yy.StringNode($1); }
   ;

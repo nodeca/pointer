@@ -17,6 +17,6 @@ parts
   ;
 
 part
-  : OPEN_PARAM PARAM_NAME CLOSE_PARAM { $$ = $2; }
-  | CONTENT { $$ = $1; }
+  : OPEN_PARAM PARAM_NAME CLOSE_PARAM { $$ = new yy.ParamNode($2); }
+  | CONTENT { $$ = new yy.StringNode($1); }
   ;

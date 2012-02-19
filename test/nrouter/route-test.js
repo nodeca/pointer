@@ -6,7 +6,7 @@ var Route = require('../../lib/nrouter/route');
 
 
 // tmp measure to test parser
-var tmp = new Route('/foo/{bar}(.{format})');
+var tmp = new Route('/article/{category.slug}/{id}(-{slug})(.{format})');
 
 
 require('vows').describe('NRouter.Route').addBatch({

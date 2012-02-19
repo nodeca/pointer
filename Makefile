@@ -99,3 +99,14 @@ todo:
 
 .PHONY: publish lint test doc dev-deps gh-pages todo
 .SILENT: help lint test doc todo
+
+
+compile-parser:
+	@if test ! `which jison` ; then \
+		echo "You need 'jison' installed in order to compile parser." >&2 ; \
+		echo "  $ make dev-deps" >&2 ; \
+		exit 128 ; \
+		fi
+	jison src/nrouter.yy src/nrouter.l && \
+		mkdir -p lib/nrouter/route && \
+		mv nrouter.js lib/nrouter/route/parser.js

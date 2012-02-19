@@ -35,7 +35,7 @@ router.addRoute('/t{thread_id}', {
   params: {
     thread_id: /\d+/
   }
-});
+}, thread_list);
 
 // routes grouped by prefix
 router.prefix('/assets', function (router) {

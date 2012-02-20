@@ -20,9 +20,9 @@
 
 <MACROS>"{"               { this.begin("PARAM"); return "OPEN_PARAM"; }
 <PARAM>[^}]+?/"}"         { this.popState(); return "PARAM_NAME"; }
-<MACROS>"}"               { this.popState(); return "CLOSE_PARAM"; }
+<MACROS>"}"               { this.popState(); return "CLOSE"; }
 
 <MACROS>"("               { this.popState(); return "OPEN_OPTIONAL"; }
-<MACROS>")"               { this.popState(); return "CLOSE_OPTIONAL"; }
+<MACROS>")"               { this.popState(); return "CLOSE"; }
 
 <INITIAL><<EOF>>          { return 'EOF'; }

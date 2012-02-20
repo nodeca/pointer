@@ -2,7 +2,7 @@
 
 %%
 
-[^\x00]*?/[{()]             {
+[^\x00]*?/[{()}]            {
                               if (yytext.slice(-1) !== "\\")
                                 this.begin("MACROS");
 
@@ -16,7 +16,7 @@
 
 [^\x00]+                    { return "STRING"; }
 
-<ESCAPED>[^\x00]+?/[{()]    { this.popState(); return "STRING"; }
+<ESCAPED>[^\x00]+?/[{()}]   { this.popState(); return "STRING"; }
 
 <MACROS>"{"                 { return "OPEN_PARAM"; }
 <MACROS>[a-zA-Z_.$-]+?/"}"  { return "PARAM_NAME"; }

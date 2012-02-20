@@ -6,13 +6,11 @@ var Route = require('../../lib/nrouter/route');
 
 
 // tmp measure to test parser
-var tmp;
-tmp = new Route('');
-tmp = new Route('/article/{category.slug}');
-tmp = new Route('/article/{category.slug}/\\{id}-{id}');
-tmp = new Route('/article/{category.slug}/{id}(.html)');
-tmp = new Route('/article/{category.slug}/{id}(-{slug})(.{format})');
-tmp = new Route('/article/{category.slug}/{id}\\{hehe}(-{slug})(.{format})');
+var tmp = new Route('/article/{category.slug}/{id}(-{slug})([.]{format})');
+
+console.log(tmp.match('/article/example-data/123-sample.html'));
+console.log(tmp.match('/article/example-data/123.html'));
+console.log(tmp.match('/article/example-data/123'));
 
 require('vows').describe('NRouter.Route').addBatch({
   'need tests': 'tdb'

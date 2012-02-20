@@ -38,9 +38,10 @@ router.addRoute('/t{thread_id}', {
 }, thread_list);
 
 // routes grouped by prefix
-router.prefix('/assets', function (router) {
-  router.addRoute('/css/{file}(-{md5}).{ext}', another_handler);
-});
+router.addRoute('/css/{file}(-{md5}).{ext}', {
+  prefix: '/assets'
+}, another_handler);
+// -> /assets/css/{file}(-{md5}).{ext}
 
 
 //

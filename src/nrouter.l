@@ -1,13 +1,27 @@
-%x PARAM
+%x
+
+//  AVAILABLE TOKENS: OPEN_GROUP, OPEN_PARAM, PARAM_NAME, CLOSE, STRING, EOF
+//
+//  Example: /foo/{bar}(.{baz})
+//           STRING         /foo/
+//           OPEN_PARAM     {
+//           PARAM_NAME     bar
+//           CLOSE          }
+//           OPEN_GROUP     (
+//           STRING         .
+//           OPEN_PARAM     {
+//           PARAM_NAME     baz
+//           CLOSE          }
+//           CLOSE          )
+//           EOF
+
+// TODO: implement tokenizer
+// TODO: remove dbg once tokenizer finished
+
+%{
+  function dbg(k) { console.log(k + ': "' + yytext + '"'); }
+%}
 
 %%
 
-[^\x00]*?/("{")               {
-                                if (yytext.slice(-1) !== "\\") this.begin("PARAM");
-                                if (yytext) return 'CONTENT';
-                              }
-[^\x00]+                      { return 'CONTENT'; }
-<PARAM>"{"                    { return 'OPEN_PARAM'; }
-<PARAM>[^}]+/"}"              { return 'PARAM_NAME'; }
-<PARAM>"}"                    { this.popState(); return 'CLOSE_PARAM'; }
-<INITIAL,PARAM><<EOF>>        { return 'EOF'; }
+<INITIAL><<EOF>>              { return 'EOF'; }

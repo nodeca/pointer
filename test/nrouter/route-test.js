@@ -146,41 +146,11 @@ require('vows').describe('NRouter.Route').addBatch({
     }
   }),
 
-  'Dot is not a meta-char': test_matching({
-    '/test.{format}': {
+  'RegExp keywords and metachars got escaped in strings': test_matching({
+    '/test[abc]*?.{format}': {
       expectations: {
-        '/test.html': {format: 'html'},
-        '/test-html': false
-      }
-    }
-  }),
-
-  'Question mark is a meta-char with zero-one multiplier': test_matching({
-    '/test?{format}': {
-      expectations: {
-        '/testhtml': {format: 'html'},
-        '/test.html': {format: 'html'},
-        '/test-html': {format: 'html'}
-      }
-    }
-  }),
-
-  'Asterisk is a meta-char with zero-many multiplier': test_matching({
-    '/test*{format}': {
-      expectations: {
-        '/testhtml': {format: 'html'},
-        '/test.html': {format: 'html'},
-        '/test--html': {format: 'html'}
-      }
-    }
-  }),
-
-  'Plus sign is a meta-char with one-many multiplier': test_matching({
-    '/test*{format}': {
-      expectations: {
-        '/testhtml': false,
-        '/test.html': {format: 'html'},
-        '/test--html': {format: 'html'}
+        '/test[abc]*?.html': {format: 'html'},
+        '/test[abc]*?-html': false
       }
     }
   })

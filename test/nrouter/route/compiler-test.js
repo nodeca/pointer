@@ -26,7 +26,7 @@ function test_compiler(definitions) {
   var tests = {};
 
   Common.each(definitions, function (expected, route) {
-    tests[route] = function () {
+    tests["Route: '" + route + "'"] = function () {
       var ast = Compiler.compile(route);
       Assert.deepEqual(map_nodes(ast), expected);
     };

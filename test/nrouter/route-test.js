@@ -155,7 +155,7 @@ require('vows').describe('NRouter.Route').addBatch({
     }
   }),
 
-  'Question mark is a meta-char with zero-one multiplier': test_matching({
+  'Question mark is a meta-char with zero-one quantifier': test_matching({
     '/test?{format}': {
       expectations: {
         '/testhtml': {format: 'html'},
@@ -165,7 +165,7 @@ require('vows').describe('NRouter.Route').addBatch({
     }
   }),
 
-  'Asterisk is a meta-char with zero-many multiplier': test_matching({
+  'Asterisk is a meta-char with zero-many quantifier': test_matching({
     '/test*{format}': {
       expectations: {
         '/testhtml': {format: 'html'},
@@ -175,7 +175,7 @@ require('vows').describe('NRouter.Route').addBatch({
     }
   }),
 
-  'Plus sign is a meta-char with one-many multiplier': test_matching({
+  'Plus sign is a meta-char with one-many quantifier': test_matching({
     '/test*{format}': {
       expectations: {
         '/testhtml': false,

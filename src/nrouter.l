@@ -16,7 +16,7 @@
 
 [^\x00]+                    { return "STRING"; }
 
-<ESCAPED>[^\x00]+?/[{()}]   { this.popState(); return "STRING"; }
+<ESCAPED>[^\x00]+?/[{()}]   { this.popState(); return "ESTRING"; }
 
 <MACROS>"{"                 { return "OPEN_PARAM"; }
 <MACROS>[a-zA-Z_.$-]+?/"}"  { return "PARAM_NAME"; }

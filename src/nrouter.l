@@ -3,10 +3,7 @@
 %%
 
 <*>"\\"/[{}()]              { this.begin("escape"); }
-<escape>[{}()]              {
-                              this.popState();
-                              return "STRING";
-                            }
+<escape>[{}()]              { this.popState(); return "STRING"; }
 <*>"\\"/![{}()]             { return "STRING"; }
 <*>[^{}()\\]+               { return "STRING"; }
 

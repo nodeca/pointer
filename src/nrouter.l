@@ -1,42 +1,31 @@
-%x esc macros param inner
+%x escape param optional
+
+%{
+  this.currState = function () {
+    return this.conditionStack[this.conditionStack.length-1];
+  };
+
+  this.dbg = function (msg) {
+    console.log(msg + ": " + yytext);
+  };
+%}
 
 %%
 
-<INITIAL,inner>[^\x00]*?/[{}()] {
-                                  if (yytext.slice(-1) !== "\\")
-                                    this.begin("macros");
-                                  if (yytext.slice(-1) === "\\")
-                                    yytext = yytext.substr(0, yyleng-1),
-                                    this.begin("esc");
-                                  if (yytext)
-                                    return "STRING";
-                                }
-<esc>[^\x00]+?/[{}()]           {
-                                  this.popState();
-                                  return "STRING";
-                                }
-<macros>"{"                     {
-                                  this.popState();
-                                  this.begin("param");
-                                  return "OPEN_PARAM";
-                                }
-<param>.+?/"}"                  {
-                                  return "PARAM_NAME";
-                                }
-<param>"}"                      {
-                                  this.popState();
-                                  this.popState();
-                                  return "CLOSE";
-                                }
-<macros>"("                     {
-                                  this.popState();
-                                  this.begin("inner");
-                                  return "OPEN_OPTIONAL";
-                                }
-<inner>")"                      {
-                                  this.popState();
-                                  this.popState();
-                                  return "CLOSE";
-                                }
-<INITIAL>[^\x00]+               { return "STRING"; }
-<INITIAL><<EOF>>                { return 'EOF'; }
+<*>"\\"/[{}()]              { this.begin("escape"); }
+<escape>[{}()]              {
+                              this.popState();
+                              return "param" === this.currState() ? "PARAM" : "STRING";
+                            }
+
+<*>"{"                      { this.begin("param"); return "OPEN_PARAM"; }
+<param>"}"                  { this.popState(); return "CLOSE_PARAM"; }
+
+<*>"("                      { this.begin("optional"); return "OPEN_OPTIONAL"; }
+<optional>")"               { this.popState(); return "CLOSE_OPTIONAL"; }
+
+<*>.+?                      {
+                              return "param" === this.currState() ? "PARAM" : "STRING";
+                            }
+
+<INITIAL,optional><<EOF>>   { return 'EOF'; }

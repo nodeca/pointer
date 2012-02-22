@@ -17,7 +17,12 @@ parts
   ;
 
 part
-  : OPEN_OPTIONAL parts CLOSE { $$ = new yy.OptionalGroupNode($2); }
-  | OPEN_PARAM PARAM_NAME CLOSE { $$ = new yy.ParamNode($2); }
+  : OPEN_OPTIONAL route CLOSE_OPTIONAL { $$ = new yy.OptionalGroupNode($2); }
+  | OPEN_PARAM param_name CLOSE_PARAM { $$ = new yy.ParamNode($2); }
   | STRING { $$ = new yy.StringNode($1); }
+  ;
+
+param_name
+  : PARAM
+  | param_name PARAM { $$ = $1 + $2; }
   ;

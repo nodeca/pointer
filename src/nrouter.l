@@ -1,20 +1,14 @@
 %x escape param optional
 
-%{
-  this.currState = function () {
-    return this.conditionStack[this.conditionStack.length-1];
-  };
-%}
-
 %%
 
 <*>"\\"/[{}()]              { this.begin("escape"); }
 <escape>[{}()]              {
                               this.popState();
-                              return "param" === this.currState() ? "PARAM" : "STRING";
+                              return "STRING";
                             }
-<*>"\\"/![{}()]             { return "param" === this.currState() ? "PARAM" : "STRING"; }
-<*>[^{}()\\]+               { return "param" === this.currState() ? "PARAM" : "STRING"; }
+<*>"\\"/![{}()]             { return "STRING"; }
+<*>[^{}()\\]+               { return "STRING"; }
 
 
 <*>"{"                      { this.begin("param"); return "OPEN_PARAM"; }

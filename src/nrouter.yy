@@ -18,11 +18,11 @@ parts
 
 part
   : OPEN_OPTIONAL route CLOSE { $$ = new yy.OptionalGroupNode($2); }
-  | OPEN_PARAM param_name CLOSE { $$ = new yy.ParamNode($2); }
+  | OPEN_PARAM substrings CLOSE { $$ = new yy.ParamNode($2); }
   | STRING { $$ = new yy.StringNode($1); }
   ;
 
-param_name
-  : PARAM
-  | param_name PARAM { $$ = $1 + $2; }
+substrings
+  : STRING
+  | substrings STRING { $$ = $1 + $2; }
   ;

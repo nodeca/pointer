@@ -17,15 +17,15 @@
                               this.popState();
                               return "param" === this.currState() ? "PARAM" : "STRING";
                             }
+<*>"\\"/![{}()]             { return "param" === this.currState() ? "PARAM" : "STRING"; }
+<*>[^{}()\\]+               { return "param" === this.currState() ? "PARAM" : "STRING"; }
+
 
 <*>"{"                      { this.begin("param"); return "OPEN_PARAM"; }
-<param>"}"                  { this.popState(); return "CLOSE_PARAM"; }
-
 <*>"("                      { this.begin("optional"); return "OPEN_OPTIONAL"; }
+
+<param>"}"                  { this.popState(); return "CLOSE_PARAM"; }
 <optional>")"               { this.popState(); return "CLOSE_OPTIONAL"; }
 
-<*>.+?                      {
-                              return "param" === this.currState() ? "PARAM" : "STRING";
-                            }
-
+<INITIAL>"}"|")"            { return "STRING"; }
 <INITIAL,optional><<EOF>>   { return 'EOF'; }

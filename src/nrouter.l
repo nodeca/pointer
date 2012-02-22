@@ -4,10 +4,6 @@
   this.currState = function () {
     return this.conditionStack[this.conditionStack.length-1];
   };
-
-  this.dbg = function (msg) {
-    console.log(msg + ": " + yytext);
-  };
 %}
 
 %%
@@ -24,8 +20,8 @@
 <*>"{"                      { this.begin("param"); return "OPEN_PARAM"; }
 <*>"("                      { this.begin("optional"); return "OPEN_OPTIONAL"; }
 
-<param>"}"                  { this.popState(); return "CLOSE_PARAM"; }
-<optional>")"               { this.popState(); return "CLOSE_OPTIONAL"; }
+<param>"}"                  { this.popState(); return "CLOSE"; }
+<optional>")"               { this.popState(); return "CLOSE"; }
 
 <INITIAL>"}"|")"            { return "STRING"; }
 <INITIAL,optional><<EOF>>   { return 'EOF'; }

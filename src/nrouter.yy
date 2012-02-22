@@ -20,5 +20,4 @@ part
   : OPEN_OPTIONAL parts CLOSE { $$ = new yy.OptionalGroupNode($2); }
   | OPEN_PARAM PARAM_NAME CLOSE { $$ = new yy.ParamNode($2); }
   | STRING { $$ = new yy.StringNode($1); }
-  | ESTRING { $$ = new yy.StringNode($1); }
   ;

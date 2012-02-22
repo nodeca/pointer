@@ -3,13 +3,16 @@
 %%
 
 <INITIAL,inner>[^\x00]*?/[{}()] {
-                                  if (yytext.slice(-1) !== "\\") this.begin("macros");
-                                  if (yytext.slice(-1) === "\\") this.begin("esc");
-                                  if (yytext) return "STRING";
+                                  if (yytext.slice(-1) !== "\\")
+                                    this.begin("macros");
+                                  if (yytext.slice(-1) === "\\")
+                                    yytext = yytext.substr(0, yyleng-1),
+                                    this.begin("esc");
+                                  if (yytext)
+                                    return "STRING";
                                 }
 <esc>[^\x00]+?/[{}()]           {
                                   this.popState();
-                                  yytext = yytext.substr(0, yyleng-1);
                                   return "STRING";
                                 }
 <macros>"{"                     {

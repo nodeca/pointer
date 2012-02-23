@@ -10,7 +10,11 @@ var nrouter = new NRouter({
   '/articles/{id}(-{slug}(-{page}))(.{format})': {
     name: 'article',
     params: {
-      page: /\d+?/,
+      id: /\d+?/,
+      page: {
+        match: /\d+?/,
+        default: 1
+      },
       format: 'html'
     }
   },
@@ -18,6 +22,7 @@ var nrouter = new NRouter({
   '/articles/{id}(-{page})(.{format})': {
     name: 'article',
     params: {
+      id: /\d+?/,
       page: /\d+?/,
       format: 'html'
     }
@@ -32,8 +37,8 @@ var nrouter = new NRouter({
     }
   },
 
-  '/{year}-{month}-{day}.html': {
-    name: 'post',
+  '/{year}-{month}-{day}-{slug}.html': {
+    name: 'blog',
     prefix: '/blog'
   }
 });
@@ -57,6 +62,27 @@ function test_generated_links(definitions) {
 
   return tests;
 }
+
+
+function test_route_matcher(definitions) {
+  var tests = {};
+
+  Common.each(definitions, function (params, url) {
+    tests[url + ' >> ' + JSON.stringify(params)] = function () {
+      var result = nrouter.match(url);
+
+      if (!params || 'null' === params) {
+        Assert.isNull(result);
+      } else {
+        Assert.isNotNull(result);
+        Assert.deepEqual(result.params, params);
+      }
+    };
+  });
+
+  return tests;
+}
+
 
 require('vows').describe('NRouter').addBatch({
   'Building links': {
@@ -97,10 +123,23 @@ require('vows').describe('NRouter').addBatch({
     }),
 
     'preserves prefix': test_generated_links({
-      '/blog/2012-02-23.html': {
-        name: 'post',
-        params: {year: 2012, month: '02', day: 23}
+      '/blog/2012-02-23-foobar.html': {
+        name: 'blog',
+        params: {year: 2012, month: '02', day: 23, slug: 'foobar'}
       }
+    })
+  },
+
+  'Finding matching route': {
+    'respects default values of params': test_route_matcher({
+      '/articles/42-foobar-5.html': {id: '42', slug: 'foobar', page: '5', format: 'html'},
+      '/articles/42-foobar.html': {id: '42', slug: 'foobar', page: 1, format: 'html'},
+      '/posts/2012-foobar.html': {year: 2012, month: undefined, day: undefined, slug: 'foobar'}
+    }),
+
+    'respects prefixes': test_route_matcher({
+      '/posts/2012-02-23-foobar.html': {year: 2012, month: '02', day: 23, slug: 'foobar'},
+      '/blog/2012-02-23-foobar.html': {year: 2012, month: '02', day: 23, slug: 'foobar'}
     })
   }
 }).export(module);

@@ -15,7 +15,7 @@ function test_matching(definitions) {
   Common.each(definitions, function (options, pattern) {
     var route, assertions;
 
-    route = new Route(pattern, {}, noop);
+    route = new Route(pattern, options.params || {}, noop);
     assertions = test['~ ' + pattern] = {};
 
     Common.each(options.expectations, function (expect, url) {
@@ -35,32 +35,6 @@ function test_matching(definitions) {
   return test;
 }
 
-
-function test_builder(definitions) {
-  var test = {};
-
-  Common.each(definitions, function (options, pattern) {
-    var route, assertions;
-
-    route = new Route(pattern, options.params || {}, noop);
-    assertions = test['~ ' + pattern] = {};
-
-    Common.each(options.expectations, function (params, expectUrl) {
-      assertions[JSON.stringify(params) + ' >> ' + expectUrl] = function () {
-        var data = route.buildURL(params);
-
-        if (!expectUrl) {
-          Assert.isNull(data);
-        } else {
-          Assert.isNotNull(data);
-          Assert.equal(data, expectUrl);
-        }
-      };
-    });
-  });
-
-  return test;
-}
 
 require('vows').describe('NRouter.Route').addBatch({
   'Routes are matched with "boundaries"': test_matching({
@@ -178,18 +152,6 @@ require('vows').describe('NRouter.Route').addBatch({
       expectations: {
         '/test[abc]*?.html': {format: 'html'},
         '/test[abc]*?-html': false
-      }
-    }
-  })
-}).addBatch({
-  'Building URLS': test_builder({
-    '/article/{id}(-{slug})(.{format})': {
-      expectations: {
-        null: {},
-        '/article/123': {id: 123},
-        '/article/123.pdf': {id: 123, format: 'pdf'},
-        '/article/123-foobar': {id: 123, slug: 'foobar'},
-        '/article/123-foobar.html': {id: 123, slug: 'foobar', format: 'html'}
       }
     }
   })

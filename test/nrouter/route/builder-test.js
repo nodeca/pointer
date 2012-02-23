@@ -19,16 +19,18 @@ function test_builder(definitions) {
     assertions = test['~ ' + pattern] = {};
 
     Common.each(options.expectations, function (params, expectUrl) {
-      assertions[JSON.stringify(params) + ' >> ' + expectUrl] = function () {
-        var data = route.buildURL(params);
+      (Array.isArray(params) ? params : [params]).forEach(function (params) {
+        assertions[expectUrl + ' << ' + JSON.stringify(params)] = function () {
+          var data = route.buildURL(params);
 
-        if (!expectUrl) {
-          Assert.isNull(data);
-        } else {
-          Assert.isNotNull(data);
-          Assert.equal(data, expectUrl);
-        }
-      };
+          if (!expectUrl || 'null' === expectUrl) {
+            Assert.isNull(data);
+          } else {
+            Assert.isNotNull(data);
+            Assert.equal(data, expectUrl);
+          }
+        };
+      });
     });
   });
 
@@ -38,13 +40,29 @@ function test_builder(definitions) {
 
 require('vows').describe('NRouter.Route.Builder').addBatch({
   'Building URLS': test_builder({
-    '/article/{id}(-{slug})(.{format})': {
+    '/article/{id}(-{slug}(-{page}))(.{format})': {
       expectations: {
-        '': {},
-        '/article/123': {id: 123},
-        '/article/123.pdf': {id: 123, format: 'pdf'},
-        '/article/123-foobar': {id: 123, slug: 'foobar'},
-        '/article/123-foobar.html': {id: 123, slug: 'foobar', format: 'html'}
+        null: {},
+        '/article/123': [
+          {id: 123},
+          {id: 123, page: 42}
+        ],
+        '/article/123.pdf': [
+          {id: 123, format: 'pdf'},
+          {id: 123, page: 42, format: 'pdf'}
+        ],
+        '/article/123-foobar': [
+          {id: 123, slug: 'foobar'}
+        ],
+        '/article/123-foobar-42': [
+          {id: 123, slug: 'foobar', page: 42}
+        ],
+        '/article/123-foobar.html': [
+          {id: 123, slug: 'foobar', format: 'html'}
+        ],
+        '/article/123-foobar-42.html': [
+          {id: 123, slug: 'foobar', page: 42, format: 'html'}
+        ]
       }
     }
   })

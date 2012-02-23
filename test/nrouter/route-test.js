@@ -22,7 +22,7 @@ function test_matching(definitions) {
       assertions[url + ' >> ' + JSON.stringify(expect)] = function () {
         var data = route.match(url);
 
-        if (!expect) {
+        if (!expect || 'null' === expect) {
           Assert.isNull(data);
         } else {
           Assert.isNotNull(data);
@@ -41,8 +41,8 @@ require('vows').describe('NRouter.Route').addBatch({
     '/articles': {
       expectations: {
         '/articles': {},
-        '/articles/': false,
-        '/article': false
+        '/articles/': null,
+        '/article': null
       }
     }
   }),
@@ -52,14 +52,14 @@ require('vows').describe('NRouter.Route').addBatch({
       expectations: {
         '/article/abc': {id: 'abc'},
         '/article/123': {id: '123'},
-        '/article/': false
+        '/article/': null
       }
     },
     '/article/{id}/': {
       expectations: {
         '/article/abc/': {id: 'abc'},
         '/article/123/': {id: '123'},
-        '/article//': false
+        '/article//': null
       }
     }
   }),
@@ -83,8 +83,8 @@ require('vows').describe('NRouter.Route').addBatch({
         '/article/42.html': {id: '42', slug: undefined},
         '/article/42-.html': {id: '42', slug: ''},
         '/article/42-testing.html': {id: '42', slug: 'testing'},
-        '/article/42-testing.html.html': false,
-        '/article/123-testing.html': false
+        '/article/42-testing.html.html': null,
+        '/article/123-testing.html': null
       }
     }
   }),
@@ -99,8 +99,8 @@ require('vows').describe('NRouter.Route').addBatch({
         '/article/42.html': {id: '42', slug: undefined},
         '/article/42-.html': {id: '42', slug: ''},
         '/article/42-testing.html': {id: '42', slug: 'testing'},
-        '/article/42-testing.html.html': false,
-        '/article/123-testing.html': false
+        '/article/42-testing.html.html': null,
+        '/article/123-testing.html': null
       }
     }
   }),
@@ -151,7 +151,7 @@ require('vows').describe('NRouter.Route').addBatch({
     '/test[abc]*?.{format}': {
       expectations: {
         '/test[abc]*?.html': {format: 'html'},
-        '/test[abc]*?-html': false
+        '/test[abc]*?-html': null
       }
     }
   })

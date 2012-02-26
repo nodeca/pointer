@@ -48,11 +48,11 @@ require('vows').describe('NRouter.Route.Compiler').addBatch({
 
     // escaping
 
-    '/foo\\{test}': ['s'],
+    '/foo\\{test}': ['s', 's', 's', 's'],
     '/foo{test\\}more}': ['s','p'],
-    '/foo\\(test)': ['s'],
-    '/foo(test\\)more)': ['s',['s']],
-    '/foo(test\\)(inner)more)': ['s',['s',['s'],'s']],
-    '/foo/\\({a}(-{b}\\))crazzy': ['s','p',['s','p','s'],'s']
+    '/foo\\(test)': ['s', 's', 's', 's'],
+    '/foo(test\\)more)': ['s',['s','s','s']],
+    '/foo(test\\)(inner)more)': ['s',['s','s',['s'],'s']],
+    '/foo/\\({a}(-{b}\\))crazzy': ['s','s','p',['s','p','s'],'s']
   })
 }).export(module);

@@ -38,7 +38,7 @@ function test_builder(definitions) {
 }
 
 
-require('vows').describe('Pointer.Route.Builder').addBatch({
+require('vows').describe('Pointer.Route.URLBuilder').addBatch({
   'Building URLS': test_builder({
     '/article/{id}(-{slug}(-{page}))(.{format})': {
       expectations: {

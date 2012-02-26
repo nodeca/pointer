@@ -1,1 +1,1 @@
-module.exports = require('./lib/nrouter');
+module.exports = require('./lib/pointer');

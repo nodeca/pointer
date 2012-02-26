@@ -1,4 +1,4 @@
-NRouter
+Pointer
 =======
 
 Server/Client router for nodeca:

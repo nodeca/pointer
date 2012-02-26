@@ -2,8 +2,8 @@
 
 
 var Assert = require('assert');
-var Compiler = require('../../../lib/nrouter/route/compiler');
-var Common = require('../../../lib/nrouter/common');
+var Compiler = require('../../../lib/pointer/route/compiler');
+var Common = require('../../../lib/pointer/common');
 
 
 // map of nodetype simplification
@@ -38,7 +38,7 @@ function test_compiler(definitions) {
 }
 
 
-require('vows').describe('NRouter.Route.Compiler').addBatch({
+require('vows').describe('Pointer.Route.Compiler').addBatch({
   'Compiling routes into AST': test_compiler({
     '': [],
     '/foo': ['s'],

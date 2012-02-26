@@ -2,11 +2,11 @@
 
 
 var Assert = require('assert');
-var Common = require('../lib/nrouter/common');
-var NRouter = require('..');
+var Common = require('../lib/pointer/common');
+var Pointer = require('..');
 
 
-var nrouter = new NRouter({
+var pointer = new Pointer({
   '/articles/{id}(-{slug}(-{page}))(.{format})': {
     name: 'article',
     params: {
@@ -49,7 +49,7 @@ function test_generated_links(definitions) {
 
   Common.each(definitions, function (data, url) {
     tests['[' + data.name + '] ' + url + ' << ' + JSON.stringify(data.params)] = function () {
-      var result = nrouter.linkTo(data.name, data.params);
+      var result = pointer.linkTo(data.name, data.params);
 
       if (!url || 'null' === url) {
         Assert.isNull(result);
@@ -69,7 +69,7 @@ function test_route_matcher(definitions) {
 
   Common.each(definitions, function (params, url) {
     tests[url + ' >> ' + JSON.stringify(params)] = function () {
-      var result = nrouter.match(url);
+      var result = pointer.match(url);
 
       if (!params || 'null' === params) {
         Assert.isNull(result);
@@ -84,7 +84,7 @@ function test_route_matcher(definitions) {
 }
 
 
-require('vows').describe('NRouter').addBatch({
+require('vows').describe('Pointer').addBatch({
   'Building links': {
     'based on `name` to find route to build URL for': test_generated_links({
       '/posts/2012-02-23-foobar.html': {

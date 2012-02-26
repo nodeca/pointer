@@ -2,4 +2,4 @@
 doc/
 node_modules/
 tmp/
-lib/nrouter/route/parser.js
+lib/pointer/route/parser.js

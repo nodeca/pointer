@@ -1,15 +1,15 @@
 {
-  "name"            : "nrouter",
+  "name"            : "Pointer",
   "version"         : "0.0.1",
   "description"     : "Client-Server router.",
-  "keywords"        : ["router", "dispatcher", "nodeca"],
-  "homepage"        : "https://github.com/nodeca/nrouter",
+  "keywords"        : ["router", "dispatcher"],
+  "homepage"        : "https://github.com/nodeca/pointer",
 
   "author"          : "Aleksey V Zapparov <ixti@member.fsf.org> (http://ixti.net/)",
 
-  "bugs"            : { "url": "https://github.com/nodeca/nrouter/issues" },
-  "license"         : { "type": "MIT", "url": "https://github.com/nodeca/nrouter/blob/master/LICENSE" },
-  "repository"      : { "type": "git", "url": "git://github.com/nodeca/nrouter.git" },
+  "bugs"            : { "url": "https://github.com/nodeca/pointer/issues" },
+  "license"         : { "type": "MIT", "url": "https://github.com/nodeca/pointer/blob/master/LICENSE" },
+  "repository"      : { "type": "git", "url": "git://github.com/nodeca/pointer.git" },
 
   "main"            : "./index.js",
 

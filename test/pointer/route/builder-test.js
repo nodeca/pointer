@@ -2,8 +2,8 @@
 
 
 var Assert = require('assert');
-var Route = require('../../../lib/nrouter/route');
-var Common = require('../../../lib/nrouter/common');
+var Route = require('../../../lib/pointer/route');
+var Common = require('../../../lib/pointer/common');
 
 
 function noop() {}
@@ -38,7 +38,7 @@ function test_builder(definitions) {
 }
 
 
-require('vows').describe('NRouter.Route.Builder').addBatch({
+require('vows').describe('Pointer.Route.Builder').addBatch({
   'Building URLS': test_builder({
     '/article/{id}(-{slug}(-{page}))(.{format})': {
       expectations: {

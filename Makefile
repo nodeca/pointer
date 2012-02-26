@@ -97,7 +97,7 @@ todo:
 	grep 'TODO' -n -r ./lib 2>/dev/null || test true
 
 
-.PHONY: publish lint test doc dev-deps gh-pages todo
+.PHONY: compile-parser publish lint test doc dev-deps gh-pages todo
 .SILENT: help lint test doc todo
 
 
@@ -107,6 +107,5 @@ compile-parser:
 		echo "  $ make dev-deps" >&2 ; \
 		exit 128 ; \
 		fi
-	jison src/nrouter.yy src/nrouter.l && \
-		mkdir -p lib/nrouter/route && \
-		mv nrouter.js lib/nrouter/route/parser.js
+	jison src/pointer.yy src/pointer.l && \
+		mv pointer.js lib/pointer/route/parser.js

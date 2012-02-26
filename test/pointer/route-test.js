@@ -2,8 +2,8 @@
 
 
 var Assert = require('assert');
-var Route = require('../../lib/nrouter/route');
-var Common = require('../../lib/nrouter/common');
+var Route = require('../../lib/pointer/route');
+var Common = require('../../lib/pointer/common');
 
 
 function noop() {}
@@ -36,7 +36,7 @@ function test_matching(definitions) {
 }
 
 
-require('vows').describe('NRouter.Route').addBatch({
+require('vows').describe('Pointer.Route').addBatch({
   'Routes are matched with "boundaries"': test_matching({
     '/articles': {
       expectations: {

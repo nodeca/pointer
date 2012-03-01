@@ -1,5 +1,5 @@
 {
-  "name"            : "Pointer",
+  "name"            : "pointer",
   "version"         : "0.0.1",
   "description"     : "Client-Server router.",
   "keywords"        : ["router", "dispatcher"],

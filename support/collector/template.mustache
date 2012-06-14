@@ -1,0 +1,30 @@
+{{=<% %>=}}
+var <%& name %> = (function () {
+  (function (self) {
+    self.def  = function (name, func) {
+      self[name] = {exports: {}, called: false, func: func};
+    };
+    self.req = function (name) {
+      if (self[name].called) {
+        return self[name].exports;
+      }
+
+      self[name].called  = true;
+      self[name].exports = self[name].func.call(self[name], self.req);
+
+      return self[name].exports;
+    };
+  }(this));
+
+  <%# sources %>
+  this.def(<%{ uid }%>, function (require, __dirname, __filename) {
+    var module = this, exports = this.exports;
+
+<%{ source }%>
+
+    return this.exports;
+  });
+  <%/ sources %>
+
+  return this.req(<%{ uid }%>);
+}.call({}));

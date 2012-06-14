@@ -1,5 +1,6 @@
 .git/
 doc/
 node_modules/
+support/
 tmp/
 lib/pointer/route/parser.js

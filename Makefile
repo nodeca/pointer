@@ -109,3 +109,9 @@ compile-parser:
 		fi
 	jison src/pointer.yy src/pointer.l && \
 		mv pointer.js lib/pointer/route/parser.js
+
+
+browserify:
+	rm -rf dist && mkdir dist
+	collector --export-name 'Pointer = window.Pointer' ./lib/pointer \
+		> dist/pointer-${NPM_VERSION}.js

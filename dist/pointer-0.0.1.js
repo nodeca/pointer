@@ -15,7 +15,7 @@ var Pointer = window.Pointer = (function () {
     };
   }(this));
 
-  this.def("0", function (require, __dirname, __filename) {
+  this.def("0", function (require) {
     var module = this, exports = this.exports;
 
 /**
@@ -235,7 +235,7 @@ Pointer.createLinkBuilder = function createLinkBuilder(pattern, params) {
 
     return this.exports;
   });
-  this.def("1", function (require, __dirname, __filename) {
+  this.def("1", function (require) {
     var module = this, exports = this.exports;
 
 'use strict';
@@ -277,7 +277,7 @@ Common.each = function each(obj, iterator, ctx) {
 
     return this.exports;
   });
-  this.def("2", function (require, __dirname, __filename) {
+  this.def("2", function (require) {
     var module = this, exports = this.exports;
 
 /** internal
@@ -538,7 +538,7 @@ Route.prototype.buildURL = function buildURL(params) {
 
     return this.exports;
   });
-  this.def("3", function (require, __dirname, __filename) {
+  this.def("3", function (require) {
     var module = this, exports = this.exports;
 
 'use strict';
@@ -647,7 +647,7 @@ Builder.prototype.build = function (params) {
 
     return this.exports;
   });
-  this.def("4", function (require, __dirname, __filename) {
+  this.def("4", function (require) {
     var module = this, exports = this.exports;
 
 'use strict';
@@ -669,7 +669,7 @@ module.exports.compile = function (route) {
 
     return this.exports;
   });
-  this.def("5", function (require, __dirname, __filename) {
+  this.def("5", function (require) {
     var module = this, exports = this.exports;
 
 'use strict';
@@ -698,7 +698,7 @@ AST.OptionalGroupNode = function (nodes) {
 
     return this.exports;
   });
-  this.def("6", function (require, __dirname, __filename) {
+  this.def("6", function (require) {
     var module = this, exports = this.exports;
 
 /* Jison generated parser */
@@ -1104,4 +1104,3 @@ if (typeof module !== 'undefined' && require.main === module) {
 
   return this.req("0");
 }.call({}));
-

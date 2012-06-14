@@ -2,5 +2,6 @@
 doc/
 node_modules/
 support/
+dist/
 tmp/
 lib/pointer/route/parser.js

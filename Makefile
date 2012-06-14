@@ -112,6 +112,6 @@ compile-parser:
 
 
 browserify:
-	rm -rf dist && mkdir dist
+	rm -rf browser && mkdir browser
 	collector --export-name 'Pointer = window.Pointer' ./lib/pointer \
-		> dist/pointer-${NPM_VERSION}.js
+		> browser/pointer.js

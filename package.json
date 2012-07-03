@@ -15,8 +15,8 @@
 
   "scripts"         : { "test": "make test-all" },
   "devDependencies" : {
-                        "vows"      : "0.6.1",
-                        "jison"     : "0.3.2",
+                        "vows"      : "~ 0.6.1",
+                        "jison"     : "~ 0.3.2",
                         "collector" : "git://github.com/nodeca/collector.git"
                       },
   "engines"         : { "node": ">= 0.6.0" }

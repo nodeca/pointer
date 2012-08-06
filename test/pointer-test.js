@@ -108,8 +108,8 @@ require('vows').describe('Pointer').addBatch({
       }
     }),
 
-    'requires all, even optional, params': test_generated_links({
-      null: {
+    'does not requires optional params': test_generated_links({
+      '/articles/42.html': {
         name: 'article',
         params: {id: 42, format: 'html'}
       }

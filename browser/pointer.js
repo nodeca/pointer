@@ -41,7 +41,7 @@ var Route = require("2");
  *
  *  - [[Pointer#addRoute]]
  **/
-var Pointer = module.exports = function Pointer(routes) {
+function Pointer(routes) {
   // all routes grouped by prefixes
   this.__routes__           = {__generic__: []};
 
@@ -55,7 +55,7 @@ var Pointer = module.exports = function Pointer(routes) {
   Common.each(routes, function (options, pattern) {
     this.addRoute(pattern, options);
   }, this);
-};
+}
 
 
 /** alias of: Pointer.new
@@ -234,6 +234,12 @@ Pointer.createLinkBuilder = function createLinkBuilder(pattern, params) {
     return r.buildURL(params || {});
   };
 };
+
+
+// MODULE EXPORTS //////////////////////////////////////////////////////////////
+
+
+module.exports = Pointer;
 
 
     return this.exports;
@@ -439,7 +445,7 @@ function build_regexp(self, nodes) {
  *        }
  *      }
  **/
-var Route = module.exports = function Route(pattern, params, meta) {
+function Route(pattern, params, meta) {
   var ast = Compiler.compile(pattern);
 
   this.__idx__    = 0; // last param index
@@ -464,7 +470,7 @@ var Route = module.exports = function Route(pattern, params, meta) {
   this.__regexp__   = new RegExp('^' + build_regexp(this, ast) + '$');
   this.__builder__  = new URLBuilder(ast);
   this.__meta__     = meta;
-};
+}
 
 
 /**
@@ -542,6 +548,12 @@ Route.prototype.buildURL = function buildURL(params) {
 };
 
 
+// MODULE EXPORTS //////////////////////////////////////////////////////////////
+
+
+module.exports = Route;
+
+
     return this.exports;
   });
   this.def("3", function (require) {
@@ -577,15 +589,12 @@ ParamBuilderNode.prototype.build = function (params) {
 };
 
 
-// MODULE EXPORT ///////////////////////////////////////////////////////////////
-
-
 //  new Builder(ast)
 //  - ast (Array): Array of nodes as returned by Compiler
 //
 //  Creates instance of builder that can render route with given params
 //  See [[Builder#build]].
-var Builder = module.exports = function Builder(ast) {
+function Builder(ast) {
   // array of param names found in the AST
   // used to validate params in [[Builder#build]]
   this.__known_params__ = [];
@@ -617,7 +626,7 @@ var Builder = module.exports = function Builder(ast) {
     // THIS SHOULD NEVER HAPPEN!!!
     throw new Error('Unknown node type: "' + node.type + '".');
   }, this);
-};
+}
 
 //  Builder#build([params]) -> String|Null
 //  - parmas (Object): Params to fill route with.
@@ -635,7 +644,6 @@ Builder.prototype.build = function (params) {
   });
 
   if (!is_valid) {
-    // not enough params for this builder
     return null;
   }
 
@@ -643,12 +651,17 @@ Builder.prototype.build = function (params) {
 
   // render and concatenate all parts
   Common.each(this.__builders__, function (builder) {
-    // make sure we concatenate Strings
-    url += (builder.build(params) || '');
+    url += builder.build(params) || '';
   });
 
   return url;
 };
+
+
+// MODULE EXPORTS //////////////////////////////////////////////////////////////
+
+
+module.exports = Builder;
 
 
     return this.exports;
@@ -668,7 +681,7 @@ Parser.yy = AST;
 
 
 // Export compiler
-module.exports.compile = function (route) {
+module.exports.compile = function compile(route) {
   return Parser.parse(route);
 };
 

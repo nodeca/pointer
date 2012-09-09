@@ -64,6 +64,27 @@ require('vows').describe('Pointer.Route.URLBuilder').addBatch({
           {id: 123, slug: 'foobar', page: 42, format: 'html'}
         ]
       }
+    },
+
+    '({proto}:)//example.com/{id}.html': {
+      expectations: {
+        null: {},
+        '//example.com/123.html': [
+          {id: 123}
+        ],
+        'http://example.com/123.html': [
+          {proto: 'http', id: 123}
+        ]
+      }
+    },
+
+    '(https:)//example.com/{id}.html': {
+      expectations: {
+        null: {},
+        'https://example.com/123.html': [
+          {id: 123}
+        ]
+      }
     }
   })
 }).export(module);

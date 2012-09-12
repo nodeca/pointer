@@ -18,7 +18,7 @@ var Pointer = window.Pointer = (function () {
   this.def("0", function (require) {
     var module = this, exports = this.exports;
 
-    /**
+/**
  *  class Pointer
  **/
 
@@ -102,7 +102,7 @@ function lazyStackPush(obj, name, value) {
 // helper to parse URL into proto, host and path respecting our internal
 // structures, so that proto|path is `*` if it's not provided.
 //
-function parseURL(url) {
+function getURLParts(url) {
   var parsed = URL(url);
 
   return {
@@ -116,7 +116,7 @@ function parseURL(url) {
 // prepares and saves regexp for the prefix under internal cache
 //
 function setPrefixRegExp(store, prefix) {
-  var parsed = parseURL(prefix);
+  var parsed = getURLParts(prefix);
 
   store = store[parsed.host] || (store[parsed.host] = {});
   store = store[parsed.proto] || (store[parsed.proto] = {});
@@ -187,7 +187,7 @@ function variants(str) {
 
 // returns object's keys sorted alphabeticaly in descending order
 //
-function sorted_keys(obj) {
+function getSortedKeys(obj) {
   var keys = [], k;
 
   for (k in obj) {
@@ -226,28 +226,28 @@ function find(arr, iter) {
  *  See [[Route#match]] for details of _MatchData_ object.
  **/
 Pointer.prototype.match = function match(url) {
-  var self    = this,
-      parsed  = parseURL(url);
+  var self = this,
+      data = getURLParts(url);
 
-  return find(variants(parsed.host), function (host) {
+  return find(variants(data.host), function (host) {
     if (!self.__prefixes__[host]) {
       return;
     }
 
-    return find(variants(parsed.proto), function (proto) {
+    return find(variants(data.proto), function (proto) {
       if (!self.__prefixes__[host][proto]) {
         return;
       }
 
-      return find(sorted_keys(self.__prefixes__[host][proto]), function (prefix) {
-        var path = parsed.path;
+      return find(getSortedKeys(self.__prefixes__[host][proto]), function (prefix) {
+        var path = data.path;
 
         // prefix can be a regexp of path or null
-        if (self.__prefixes__[host][proto][prefix]) {
+        if (null !== self.__prefixes__[host][proto][prefix]) {
           path = path.replace(self.__prefixes__[host][proto][prefix], '');
 
           // prefix regexp removed nothing - that means it does not match path
-          if (path === parsed.path) {
+          if (path === data.path) {
             return;
           }
         }
@@ -258,7 +258,7 @@ Pointer.prototype.match = function match(url) {
       });
     });
   }) || find(self.__routes__['*'], function (route) {
-    return route.match(parsed.path) || route.match(url);
+    return route.match(data.path) || route.match(url);
   }) || null;
 };
 
@@ -335,6 +335,33 @@ Pointer.createLinkBuilder = function createLinkBuilder(pattern, params) {
 };
 
 
+/**
+ *  Pointer.parseURL(url) -> Object
+ *  - url (String): URL to parse
+ *
+ *  Returns parts of parsed URL:
+ *
+ *  - `protocol`: eg. `http`, `https`, `file`, etc.
+ *  - `host`: eg. `www.mydomain.com`, `localhost`, etc.
+ *  - `port`: eg. `80`
+ *  - `path`: the path to the file (eg. `/folder/dir/index.html`)
+ *  - `query`: the entire querystring, eg. `item=value&item2=value2`
+ *  - `anchor`: the entire string after the `#` symbol
+ **/
+Pointer.parseURL = function parseURL(url) {
+  var o = URL(url);
+
+  return {
+    protocol: o.attr('protocol'),
+    host:     o.attr('host'),
+    port:     o.attr('port'),
+    path:     o.attr('path'),
+    query:    o.attr('query'),
+    anchor:   o.attr('fragment')
+  };
+};
+
+
 // MODULE EXPORTS //////////////////////////////////////////////////////////////
 
 
@@ -346,7 +373,7 @@ module.exports = Pointer;
   this.def("1", function (require) {
     var module = this, exports = this.exports;
 
-    'use strict';
+'use strict';
 
 
 var Common = module.exports = {};
@@ -389,7 +416,7 @@ Common.each = function each(obj, iterator, ctx) {
   this.def("2", function (require) {
     var module = this, exports = this.exports;
 
-    /** internal
+/** internal
  *  class Route
  **/
 
@@ -658,7 +685,7 @@ module.exports = Route;
   this.def("4", function (require) {
     var module = this, exports = this.exports;
 
-    'use strict';
+'use strict';
 
 
 var Common = require("1");
@@ -768,7 +795,7 @@ module.exports = Builder;
   this.def("5", function (require) {
     var module = this, exports = this.exports;
 
-    'use strict';
+'use strict';
 
 
 var AST = require("6");
@@ -790,7 +817,7 @@ module.exports.compile = function compile(route) {
   this.def("6", function (require) {
     var module = this, exports = this.exports;
 
-    'use strict';
+'use strict';
 
 
 var AST = module.exports = {};
@@ -819,7 +846,7 @@ AST.OptionalGroupNode = function (nodes) {
   this.def("7", function (require) {
     var module = this, exports = this.exports;
 
-    /* Jison generated parser */
+/* Jison generated parser */
 var pointer = (function(){
 var parser = {trace: function trace() { },
 yy: {},
@@ -1185,7 +1212,7 @@ if (typeof module !== 'undefined' && require.main === module) {
   this.def("3", function (require) {
     var module = this, exports = this.exports;
 
-    'use strict';
+'use strict';
 
 
 // based on Makr Perkins' JQuery URL Parser:
@@ -1309,10 +1336,7 @@ function set(obj, key, val) {
 
 function merge(parent, key, val) {
   if (-1 !== key.indexOf(']')) {
-    var parts = key.split('['),
-        len   = parts.length;
-
-    parse(parts, parent, 'base', val);
+    parse(key.split('['), parent, 'base', val);
   } else {
     if (!isint.test(key) && isArray(parent.base)) {
       var k, t = {};

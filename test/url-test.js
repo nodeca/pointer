@@ -103,6 +103,14 @@ require('vows').describe('URL').addBatch({
       'but should have other parts': function (url) {
         Assert.equal(url.attr('path'), '/index.html');
       }
+    },
+
+    'with credentials': {
+      topic: URL('http://ixti@example.com'),
+
+      'host should contain only host': function (url) {
+        Assert.equal(url.attr('host'), 'example.com');
+      }
     }
   }
 }).export(module);

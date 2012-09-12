@@ -18,7 +18,7 @@ var Pointer = window.Pointer = (function () {
   this.def("0", function (require) {
     var module = this, exports = this.exports;
 
-/**
+    /**
  *  class Pointer
  **/
 
@@ -26,8 +26,9 @@ var Pointer = window.Pointer = (function () {
 'use strict';
 
 
-var Common = require("1");
+var each  = require("1").each;
 var Route = require("2");
+var URL   = require("3");
 
 
 /**
@@ -43,16 +44,35 @@ var Route = require("2");
  **/
 function Pointer(routes) {
   // all routes grouped by prefixes
-  this.__routes__           = {__generic__: []};
+  //
+  //  {
+  //    '*': [ Route(), ... ],
+  //    '//example.com': [ Route(), ... ]
+  //  }
+  //
+  this.__routes__ = {};
 
-  // cache of RegExps for known prefixes
-  this.__prefix_regexps__   = {};
+  // cache of RegExps for known prefixes, grouped by host and protocol:
+  //
+  //  {
+  //    'example.com': {
+  //      'https': {
+  //        'https://users.example.com': null,
+  //      },
+  //      '*': { // any protocol
+  //        '//example.com': null,
+  //        '//example.com/admin': /^\/admin/
+  //      }
+  //    }
+  //  }
+  //
+  this.__prefixes__ = {};
 
   // routes grouped by names (needed for linkTo)
-  this.__named_routes__     = {};
+  this.__named_routes__ = {};
 
   // prefill routes if map provided
-  Common.each(routes, function (options, pattern) {
+  each(routes, function (options, pattern) {
     this.addRoute(pattern, options);
   }, this);
 }
@@ -66,6 +86,42 @@ function Pointer(routes) {
 Pointer.create = function create(routes) {
   return new Pointer(routes);
 };
+
+
+// helper to lazily initialize named stack inside object and push value into it
+//
+function lazyStackPush(obj, name, value) {
+  if (!obj[name]) {
+    obj[name] = [];
+  }
+
+  obj[name].push(value);
+}
+
+
+// helper to parse URL into proto, host and path respecting our internal
+// structures, so that proto|path is `*` if it's not provided.
+//
+function parseURL(url) {
+  var parsed = URL(url);
+
+  return {
+    proto:  parsed.attr('protocol') || '*',
+    host:   parsed.attr('host') || '*',
+    path:   parsed.attr('relative') || ''
+  };
+}
+
+
+// prepares and saves regexp for the prefix under internal cache
+//
+function setPrefixRegExp(store, prefix) {
+  var parsed = parseURL(prefix);
+
+  store = store[parsed.host] || (store[parsed.host] = {});
+  store = store[parsed.proto] || (store[parsed.proto] = {});
+  store[prefix] = parsed.path ? new RegExp('^' + parsed.path) : null;
+}
 
 
 /**
@@ -100,67 +156,110 @@ Pointer.create = function create(routes) {
  *
  *  - [[Route.new]]
  **/
-Pointer.prototype.addRoute = function addRoute(match, options) {
-  var route, group = '__generic__';
+Pointer.prototype.addRoute = function addRoute(pattern, options) {
+  var route;
 
-  // options are optional.
   options = options || {};
+  route   = new Route(pattern, options.params, options.meta, options.prefix);
+
+  // save route under prefix (* - means no prefix)
+  lazyStackPush(this.__routes__, options.prefix || '*', route);
+
+  // save named route
+  if (options.name) {
+    lazyStackPush(this.__named_routes__, options.name, route);
+  }
 
   if (options.prefix) {
-    group = options.prefix;
-    match = options.prefix + match;
+    setPrefixRegExp(this.__prefixes__, options.prefix);
   }
 
-  route = new Route(match, options.params || {}, options.meta || {});
-
-  // create new routes container for the group (prefix)
-  // and cache prefix regexp
-  if (!this.__routes__[group]) {
-    this.__routes__[group] = [];
-    this.__prefix_regexps__[group] = new RegExp('^' + options.prefix);
-  }
-
-  // if name given - push route into named stack for linkTo
-  if (options.name) {
-    if (!this.__named_routes__[options.name]) {
-      this.__named_routes__[options.name] = [];
-    }
-    this.__named_routes__[options.name].push(route);
-  }
-
-  this.__routes__[group].push(route);
   return route;
 };
 
 
+// returns protocol|host alternatives where to search prefix regexps
+//
+function variants(str) {
+  return '*' === str ? [ '*' ] : [ str, '*' ];
+}
+
+
+// returns object's keys sorted alphabeticaly in descending order
+//
+function sorted_keys(obj) {
+  var keys = [], k;
+
+  for (k in obj) {
+    if (obj.hasOwnProperty(k)) {
+      keys.push(k);
+    }
+  }
+
+  keys.sort();
+  keys.reverse();
+
+  return keys;
+}
+
+
+// iterates through array calling iterator on each element.
+// stops as soon as iterator return non-falsy value, and returns this value
+//
+function find(arr, iter) {
+  var result;
+
+  each(arr, function (val) {
+    result = iter(val);
+    return !result;
+  });
+
+  return result;
+}
+
+
 /**
- *  Pointer#match(url) -> MatchedRoute|False
+ *  Pointer#match(url) -> MatchData|Null
  *  - url (String): URL to find mathing route for.
  *
  *  Returns first matching route or false if none found.
  *  See [[Route#match]] for details of _MatchData_ object.
  **/
 Pointer.prototype.match = function match(url) {
-  var routes = this.__routes__.__generic__, found = false;
+  var self    = this,
+      parsed  = parseURL(url);
 
-  // find routes by prefix first
-  Common.each(this.__prefix_regexps__, function (re, prefix) {
-    if (re.test(url)) {
-      routes = this.__routes__[prefix];
-      return false; // stop iterator
+  return find(variants(parsed.host), function (host) {
+    if (!self.__prefixes__[host]) {
+      return;
     }
-  }, this);
 
-  // try to find matching route
-  Common.each(routes, function (route) {
-    var data = route.match(url);
-    if (data) {
-      found = data;
-      return false; // stop iterator
-    }
-  });
+    return find(variants(parsed.proto), function (proto) {
+      if (!self.__prefixes__[host][proto]) {
+        return;
+      }
 
-  return found;
+      return find(sorted_keys(self.__prefixes__[host][proto]), function (prefix) {
+        var path = parsed.path;
+
+        // prefix can be a regexp of path or null
+        if (self.__prefixes__[host][proto][prefix]) {
+          path = path.replace(self.__prefixes__[host][proto][prefix], '');
+
+          // prefix regexp removed nothing - that means it does not match path
+          if (path === parsed.path) {
+            return;
+          }
+        }
+
+        return find(self.__routes__[prefix], function (route) {
+          return route.match(path);
+        });
+      });
+    });
+  }) || find(self.__routes__['*'], function (route) {
+    return route.match(parsed.path) || route.match(url);
+  }) || null;
 };
 
 
@@ -184,7 +283,7 @@ Pointer.prototype.linkTo = function linkTo(name, params) {
   var url = null;
 
   // find route thet returns longest URL with given params
-  Common.each(this.__named_routes__[name], function (route) {
+  each(this.__named_routes__[name], function (route) {
     var tmp;
 
     // validate params for the route
@@ -247,7 +346,7 @@ module.exports = Pointer;
   this.def("1", function (require) {
     var module = this, exports = this.exports;
 
-'use strict';
+    'use strict';
 
 
 var Common = module.exports = {};
@@ -258,15 +357,14 @@ var Common = module.exports = {};
 Common.each = function each(obj, iterator, ctx) {
   var key, i, len;
 
-  // skip empty
-  if (null === obj || undefined === obj) {
+  // skip falsy objects
+  if (!obj) {
     return;
   }
 
   ctx = ctx || iterator;
-  len = obj.length;
 
-  if (len === undefined) {
+  if ('[object Array]' !== Object.prototype.toString.apply(obj)) {
     // iterate through objects
     for (key in obj) {
       if (obj.hasOwnProperty(key) && false === iterator.call(ctx, obj[key], key)) {
@@ -274,6 +372,8 @@ Common.each = function each(obj, iterator, ctx) {
       }
     }
   } else {
+    len = obj.length;
+
     // iterate through array
     for (i = 0; i < len; i += 1) {
       if (false === iterator.call(ctx, obj[i], i)) {
@@ -289,7 +389,7 @@ Common.each = function each(obj, iterator, ctx) {
   this.def("2", function (require) {
     var module = this, exports = this.exports;
 
-/** internal
+    /** internal
  *  class Route
  **/
 
@@ -297,13 +397,9 @@ Common.each = function each(obj, iterator, ctx) {
 'use strict';
 
 
-var URLBuilder = require("3");
-var Compiler = require("4");
-var Common = require("1");
-
-
-// jshint workaround
-var toObject = Object;
+var URLBuilder  = require("4");
+var Compiler    = require("5");
+var each        = require("1").each;
 
 
 // returns param internal config definition
@@ -321,7 +417,7 @@ function define_param(idx, requiredFlag, defaultValue, re) {
 function build_regexp(self, nodes) {
   var re = '';
 
-  Common.each(nodes, function (node) {
+  each(nodes, function (node) {
     if ('string' === node.type) {
       // convert string to regexp-safe
       re += node.string.replace(/([.?*+{}()\[\]])/g, '\\$1');
@@ -361,11 +457,12 @@ function build_regexp(self, nodes) {
 
 
 /**
- *  new Route(pattern[, params[, meta]])
+ *  new Route(pattern[[, params[, meta[, prefix]]])
  *  - pattern (String): URL pattern. See description below.
  *  - params (Object): Params options. Se description below.
  *  - meta (Mixed): Meta vars to be returned as part of MatchData
  *    by [[Route#match]] on successfull matching.
+ *  - prefix (String): Prepended to the URL on [[Route#buildURL]].
  *
  *  Route constructor.
  *
@@ -445,19 +542,20 @@ function build_regexp(self, nodes) {
  *        }
  *      }
  **/
-function Route(pattern, params, meta) {
+function Route(pattern, params, meta, prefix) {
   var ast = Compiler.compile(pattern);
 
   this.__idx__    = 0; // last param index
   this.__params__ = {};
+  this.__prefix__ = String(prefix || '');
 
   // prepare basic configuration of params
-  Common.each(params, function (cfg, key) {
+  each(params, function (cfg, key) {
     var default_val, match_re;
 
     if ('[object RegExp]' === Object.prototype.toString.call(cfg)) {
       match_re = cfg;
-    } else if (cfg !== toObject(cfg)) {
+    } else if (cfg !== Object(cfg)) {
       default_val = cfg;
     } else {
       default_val = cfg['default'];
@@ -496,7 +594,7 @@ Route.prototype.match = function match(url) {
     data = {route: this, params: {}, meta: this.__meta__};
 
     // build params hash from capture groups
-    Common.each(this.__params__, function (cfg, key) {
+    each(this.__params__, function (cfg, key) {
       var val = captures[cfg.idx];
       data.params[key] = ('undefined' === typeof val) ? cfg['default'] : val;
     });
@@ -523,7 +621,7 @@ Route.prototype.isValidParams = function isValidParams(params) {
 
   // verify that given params contains all keys of pattern
   // and that they match associated regexp matchers
-  Common.each(this.__params__, function (cfg, key) {
+  each(this.__params__, function (cfg, key) {
     if (cfg.required &&
         ('undefined' === typeof params[key] ||
          !cfg.match_re.test(params[key]))) {
@@ -544,7 +642,8 @@ Route.prototype.isValidParams = function isValidParams(params) {
  *  Returns `Null` when there were not enough params to build URL.
  **/
 Route.prototype.buildURL = function buildURL(params) {
-  return this.__builder__.build(params);
+  var url = this.__builder__.build(params);
+  return !url ? null : (this.__prefix__ + url);
 };
 
 
@@ -556,10 +655,10 @@ module.exports = Route;
 
     return this.exports;
   });
-  this.def("3", function (require) {
+  this.def("4", function (require) {
     var module = this, exports = this.exports;
 
-'use strict';
+    'use strict';
 
 
 var Common = require("1");
@@ -666,14 +765,14 @@ module.exports = Builder;
 
     return this.exports;
   });
-  this.def("4", function (require) {
+  this.def("5", function (require) {
     var module = this, exports = this.exports;
 
-'use strict';
+    'use strict';
 
 
-var AST = require("5");
-var Parser = require("6").parser;
+var AST = require("6");
+var Parser = require("7").parser;
 
 
 // Propose our AST as `yy` variable to JISON
@@ -688,10 +787,10 @@ module.exports.compile = function compile(route) {
 
     return this.exports;
   });
-  this.def("5", function (require) {
+  this.def("6", function (require) {
     var module = this, exports = this.exports;
 
-'use strict';
+    'use strict';
 
 
 var AST = module.exports = {};
@@ -717,10 +816,10 @@ AST.OptionalGroupNode = function (nodes) {
 
     return this.exports;
   });
-  this.def("6", function (require) {
+  this.def("7", function (require) {
     var module = this, exports = this.exports;
 
-/* Jison generated parser */
+    /* Jison generated parser */
 var pointer = (function(){
 var parser = {trace: function trace() { },
 yy: {},
@@ -1080,6 +1179,286 @@ if (typeof module !== 'undefined' && require.main === module) {
   exports.main(typeof process !== 'undefined' ? process.argv.slice(1) : require("system").args);
 }
 }
+
+    return this.exports;
+  });
+  this.def("3", function (require) {
+    var module = this, exports = this.exports;
+
+    'use strict';
+
+
+// based on Makr Perkins' JQuery URL Parser:
+// https://github.com/allmarkedup/jQuery-URL-Parser
+
+
+var parser = {
+      keys:       'source protocol authority userInfo user password host port relative path directory file query fragment'.split(' '), // keys available to query
+      strict_re:  /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*):?([^:@]*))?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/, //less intuitive, more accurate to the specs
+      loose_re:   /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*):?([^:@]*))?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/ // more intuitive, fails on relative paths and deviates from specs
+    },
+
+    isint = /^[0-9]+$/;
+
+
+function isArray(arr) {
+  return Object.prototype.toString.call(arr) === "[object Array]";
+}
+
+
+function reduce(obj, accumulator){
+  var i     = 0,
+      l     = +obj.length,
+      curr  = arguments[2];
+
+  while (i < l) {
+    if (i in obj) {
+      curr = accumulator.call(undefined, curr, obj[i], i, obj);
+    }
+    ++i;
+  }
+
+  return curr;
+}
+
+
+function promote(parent, key) {
+  if (0 === parent[key].length) {
+    return parent[key] = {};
+  }
+
+  var i, t = {};
+
+  for (i in parent[key]) {
+    t[i] = parent[key][i];
+  }
+
+  parent[key] = t;
+  return t;
+}
+
+
+function keys(obj) {
+  var arr = [], prop;
+
+  for ( prop in obj ) {
+    if ( obj.hasOwnProperty(prop) ) {
+      arr.push(prop);
+    }
+  }
+
+  return arr;
+}
+
+
+function parse(parts, parent, key, val) {
+  var part = parts.shift();
+
+  if (!part) {
+    if (isArray(parent[key])) {
+      parent[key].push(val);
+    } else if ('object' === typeof parent[key]) {
+      parent[key] = val;
+    } else if ('undefined' === typeof parent[key]) {
+      parent[key] = val;
+    } else {
+      parent[key] = [parent[key], val];
+    }
+  } else {
+    var obj = parent[key] = parent[key] || [];
+    if (']' === part) {
+      if (isArray(obj)) {
+        if (!!val) {
+          obj.push(val);
+        }
+      } else if ('object' === typeof obj) {
+        obj[keys(obj).length] = val;
+      } else {
+        obj = parent[key] = [parent[key], val];
+      }
+    } else if (-1 !== part.indexOf(']')) {
+      part = part.substr(0, part.length - 1);
+
+      if (!isint.test(part) && isArray(obj)) {
+        obj = promote(parent, key);
+      }
+
+      parse(parts, obj, part, val);
+      // key
+    } else {
+      if (!isint.test(part) && isArray(obj)) {
+        obj = promote(parent, key);
+      }
+      parse(parts, obj, part, val);
+    }
+  }
+}
+
+
+function set(obj, key, val) {
+  var v = obj[key];
+  if (undefined === v) {
+    obj[key] = val;
+  } else if (isArray(v)) {
+    v.push(val);
+  } else {
+    obj[key] = [v, val];
+  }
+}
+
+
+function merge(parent, key, val) {
+  if (-1 !== key.indexOf(']')) {
+    var parts = key.split('['),
+        len   = parts.length;
+
+    parse(parts, parent, 'base', val);
+  } else {
+    if (!isint.test(key) && isArray(parent.base)) {
+      var k, t = {};
+
+      for (k in parent.base) {
+        t[k] = parent.base[k];
+      }
+
+      parent.base = t;
+    }
+
+    set(parent.base, key, val);
+  }
+
+  return parent;
+}
+
+
+function lastBraceInKey(str) {
+  var len = str.length,
+      brace, c;
+
+  for (var i = 0; i < len; ++i) {
+    c = str[i];
+
+    if (']' === c) {
+      brace = false;
+    }
+
+    if ('[' === c) {
+      brace = true;
+    }
+
+    if ('=' === c && !brace) {
+      return i;
+    }
+  }
+}
+
+
+function parseString(str) {
+  return reduce(String(str).split(/&|;/), function(ret, pair) {
+    try {
+      pair = decodeURIComponent(pair.replace(/\+/g, ' '));
+    } catch(e) {
+      // ignore
+    }
+
+    var eql   = pair.indexOf('='),
+        brace = lastBraceInKey(pair),
+        key   = pair.substr(0, brace || eql),
+        val;
+
+    val = pair.substr(brace || eql, pair.length);
+    val = val.substr(val.indexOf('=') + 1, val.length);
+
+    if (!key) {
+      key = pair;
+      val = '';
+    }
+
+    return merge(ret, key, val);
+  }, { base: {} }).base;
+}
+
+
+function parseUri( url, strictMode ) {
+  var str = decodeURI( url ),
+      res = parser[ strictMode || false ? 'strict_re' : 'loose_re' ].exec( str ),
+      uri = { attr : {}, param : {}, seg : {} },
+      i   = 14;
+
+  while ( i-- ) {
+    uri.attr[ parser.keys[i] ] = res[i] || '';
+  }
+
+  // build query and fragment parameters
+  uri.param['query']    = parseString(uri.attr['query']);
+  uri.param['fragment'] = parseString(uri.attr['fragment']);
+
+  // split path and fragement into segments
+  uri.seg['path']     = uri.attr.path.replace(/^\/+|\/+$/g,'').split('/');
+  uri.seg['fragment'] = uri.attr.fragment.replace(/^\/+|\/+$/g,'').split('/');
+
+  // compile a 'base' domain attribute
+  uri.attr['base'] = uri.attr.host || '';
+
+  if (uri.attr.host) {
+    if (uri.attr.protocol) {
+      uri.attr['base'] = uri.attr.protocol + '://' + uri.attr['base'];
+    }
+
+    if (uri.attr.port) {
+      uri.attr['base'] = uri.attr['base'] + ':' + uri.attr.port;
+    }
+  }
+
+  return uri;
+}
+
+module.exports = function purl( url, strictMode ) {
+  url         = String(url);
+  strictMode  = !!strictMode;
+
+  return {
+
+    data : parseUri(url, strictMode),
+
+    // get various attributes from the URI
+    attr : function( attr ) {
+      return typeof attr !== 'undefined' ? this.data.attr[attr] : this.data.attr;
+    },
+
+    // return query string parameters
+    param : function( param ) {
+      return typeof param !== 'undefined' ? this.data.param.query[param] : this.data.param.query;
+    },
+
+    // return fragment parameters
+    fparam : function( param ) {
+      return typeof param !== 'undefined' ? this.data.param.fragment[param] : this.data.param.fragment;
+    },
+
+    // return path segments
+    segment : function( seg ) {
+      if ( typeof seg === 'undefined' ) {
+        return this.data.seg.path;
+      } else {
+        seg = seg < 0 ? this.data.seg.path.length + seg : seg - 1; // negative segments count from the end
+        return this.data.seg.path[seg];
+      }
+    },
+
+    // return fragment segments
+    fsegment : function( seg ) {
+      if ( typeof seg === 'undefined' ) {
+        return this.data.seg.fragment;
+      } else {
+        seg = seg < 0 ? this.data.seg.fragment.length + seg : seg - 1; // negative segments count from the end
+        return this.data.seg.fragment[seg];
+      }
+    }
+
+  };
+};
+
 
     return this.exports;
   });

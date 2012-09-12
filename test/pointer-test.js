@@ -40,7 +40,17 @@ var pointer = new Pointer({
   '/{year}-{month}-{day}-{slug}.html': {
     name: 'blog',
     prefix: '/blog'
-  }
+  },
+
+  '/{user}.html': {
+    name: 'users',
+    prefix: '//users.example.com/profile'
+  },
+
+  '/login': {
+    name: 'login',
+    prefix: 'https://example.com'
+  },
 });
 
 
@@ -126,8 +136,18 @@ require('vows').describe('Pointer').addBatch({
       '/blog/2012-02-23-foobar.html': {
         name: 'blog',
         params: {year: 2012, month: '02', day: 23, slug: 'foobar'}
+      },
+
+      '//users.example.com/profile/ixti.html': {
+        name: 'users',
+        params: {user: 'ixti'}
+      },
+
+      'https://example.com/login': {
+        name: 'login'
       }
     })
+
   },
 
   'Finding matching route': {
@@ -140,6 +160,18 @@ require('vows').describe('Pointer').addBatch({
     'respects prefixes': test_route_matcher({
       '/posts/2012-02-23-foobar.html': {year: 2012, month: '02', day: 23, slug: 'foobar'},
       '/blog/2012-02-23-foobar.html': {year: 2012, month: '02', day: 23, slug: 'foobar'}
+    }),
+
+    'respects protocols within prefixes': test_route_matcher({
+      '//users.example.com/profile/ixti.html': {user: 'ixti'},
+      'http://users.example.com/profile/ixti.html': {user: 'ixti'},
+      'https://users.example.com/profile/ixti.html': {user: 'ixti'},
+      'http://example.com/login': null,
+      'https://example.com/login': {}
+    }),
+
+    'respects domains within prefixes': test_route_matcher({
+      '//example.com/profile/ixti.html': null
     })
   }
 }).export(module);

@@ -70,6 +70,39 @@ function suite(url) {
 
 
 require('vows').describe('URL').addBatch({
-  'In strict mode':     suite(URL('http://allmarkedup.com/folder/dir/index.html?item=value#foo'), true),
-  'In non-strict mode': suite(URL('http://allmarkedup.com/folder/dir/index.html?item=value#foo'), false)
+  'Original suite': {
+    'with strict mode':     suite(URL('http://allmarkedup.com/folder/dir/index.html?item=value#foo'), true),
+    'with non-strict mode': suite(URL('http://allmarkedup.com/folder/dir/index.html?item=value#foo'), false)
+  },
+
+  'Pointer cases': {
+    'without protocol': {
+      topic: URL('//example.com/index.html'),
+
+      'should have no protocol': function (url) {
+        Assert.equal(url.attr('protocol'), '');
+      },
+
+      'but should have other parts': function (url) {
+        Assert.equal(url.attr('host'), 'example.com');
+        Assert.equal(url.attr('path'), '/index.html');
+      }
+    },
+
+    'without host part at all': {
+      topic: URL('/index.html'),
+
+      'should have no protocol': function (url) {
+        Assert.equal(url.attr('protocol'), '');
+      },
+
+      'should have no host': function (url) {
+        Assert.equal(url.attr('host'), '');
+      },
+
+      'but should have other parts': function (url) {
+        Assert.equal(url.attr('path'), '/index.html');
+      }
+    }
+  }
 }).export(module);

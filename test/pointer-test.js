@@ -51,6 +51,18 @@ var pointer = new Pointer({
     name: 'login',
     prefix: 'https://example.com'
   },
+
+
+  '/f{id}(/p{page})': {
+    name: 'forum.threads',
+    params: {
+      id: /\d+/,
+      page: {
+        match:   /\d+/,
+        default: 1
+      }
+    }
+  }
 });
 
 
@@ -146,8 +158,28 @@ require('vows').describe('Pointer').addBatch({
       'https://example.com/login': {
         name: 'login'
       }
-    })
+    }),
 
+    'allow omit optinal params': test_generated_links({
+      '/f123': {
+        name:   'forum.threads',
+        params: {id: 123}
+      }
+    }),
+
+    'skips optinal params with default value': test_generated_links({
+      '/f123': {
+        name:   'forum.threads',
+        params: {id: 123, page: 1}
+      }
+    }),
+
+    'skips optinal params with invalid value': test_generated_links({
+      '/f123': {
+        name:   'forum.threads',
+        params: {id: 123, page: 'abc'}
+      }
+    })
   },
 
   'Finding matching route': {

@@ -8,7 +8,7 @@ API Overview
 ------------
 
 
-```
+``` javascript
 //
 // fill in routes
 //
@@ -60,6 +60,6 @@ router.linkTo('thread.list', {
 var match = router.match(url);
 if (match) {
   match.params; // -> object with params, e.g. {id: 123, page: undefined}
-  match.handler; // handler function
+  match.meta;   // handler function
 }
 ```

@@ -120,27 +120,20 @@ require('vows').describe('Pointer').addBatch({
     }),
 
     'returns longest URL when multiple URLs share same `name`': test_generated_links({
-      '/articles/42-foobar-1.html': {
+      '/articles/42-foobar': {
         name: 'article',
         params: {id: 42, slug: 'foobar', page: 1, format: 'html'}
       },
-      '/articles/42-123456.html': {
+      '/articles/42-123456': {
         name: 'article',
         params: {id: 42, page: 123456, format: 'html'}
-      }
-    }),
-
-    'requires all, even optional, params': test_generated_links({
-      null: {
-        name: 'article',
-        params: {id: 42, format: 'html'}
       }
     }),
 
     'respests param matchers': test_generated_links({
       null: {
         name: 'article',
-        params: {id: 42, page: 'abc', format: 'html'}
+        params: {id: 'foo', page: 'bar', format: 'html'}
       }
     }),
 

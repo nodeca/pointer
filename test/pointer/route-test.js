@@ -154,15 +154,5 @@ require('vows').describe('Pointer.Route').addBatch({
         '/test[abc]*?-html': null
       }
     }
-  }),
-
-  'Validating params': {
-    topic: new Route('/article/{id}', {id: /\d{2}/, page: /\d{2}/}),
-    'validates only params from pattern': function (route) {
-      Assert.ok(route.isValidParams({id: 42}));
-      Assert.ok(route.isValidParams({id: 42, page: 42}));
-      Assert.ok(route.isValidParams({id: 42, page: 'foobar'}));
-      Assert.ok(!route.isValidParams({id: 'foobar'}));
-    }
-  }
+  })
 }).export(module);

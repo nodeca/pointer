@@ -3,7 +3,7 @@
 
 var Assert = require('assert');
 var Route = require('../../lib/pointer/route');
-var Common = require('../../lib/pointer/common');
+var each = require('../helper').each;
 
 
 function noop() {}
@@ -12,13 +12,13 @@ function noop() {}
 function test_matching(definitions) {
   var test = {};
 
-  Common.each(definitions, function (options, pattern) {
+  each(definitions, function (options, pattern) {
     var route, assertions;
 
     route = new Route(pattern, options.params || {}, noop);
     assertions = test['~ ' + pattern] = {};
 
-    Common.each(options.expectations, function (expect, url) {
+    each(options.expectations, function (expect, url) {
       assertions[url + ' >> ' + JSON.stringify(expect)] = function () {
         var data = route.match(url);
 

@@ -2,7 +2,7 @@
 
 
 var Assert = require('assert');
-var Common = require('../lib/pointer/common');
+var each    = require('./helper').each;
 var Pointer = require('..');
 
 
@@ -69,7 +69,7 @@ var pointer = new Pointer({
 function test_generated_links(definitions) {
   var tests = {};
 
-  Common.each(definitions, function (data, url) {
+  each(definitions, function (data, url) {
     tests['[' + data.name + '] ' + url + ' << ' + JSON.stringify(data.params)] = function () {
       var result = pointer.linkTo(data.name, data.params);
 
@@ -89,7 +89,7 @@ function test_generated_links(definitions) {
 function test_route_matcher(definitions) {
   var tests = {};
 
-  Common.each(definitions, function (params, url) {
+  each(definitions, function (params, url) {
     tests[url + ' >> ' + JSON.stringify(params)] = function () {
       var result = pointer.match(url);
 

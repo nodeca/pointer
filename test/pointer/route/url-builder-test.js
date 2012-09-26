@@ -3,7 +3,7 @@
 
 var Assert = require('assert');
 var Route = require('../../../lib/pointer/route');
-var Common = require('../../../lib/pointer/common');
+var each = require('../../helper').each;
 
 
 function noop() {}
@@ -12,13 +12,13 @@ function noop() {}
 function test_builder(definitions) {
   var test = {};
 
-  Common.each(definitions, function (options, pattern) {
+  each(definitions, function (options, pattern) {
     var route, assertions;
 
     route = new Route(pattern, {}, noop);
     assertions = test['~ ' + pattern] = {};
 
-    Common.each(options.expectations, function (params, expectUrl) {
+    each(options.expectations, function (params, expectUrl) {
       (Array.isArray(params) ? params : [params]).forEach(function (params) {
         assertions[expectUrl + ' << ' + JSON.stringify(params)] = function () {
           var data = route.buildURL(params);

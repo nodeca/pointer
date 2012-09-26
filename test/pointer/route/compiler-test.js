@@ -3,7 +3,7 @@
 
 var Assert = require('assert');
 var Compiler = require('../../../lib/pointer/route/compiler');
-var Common = require('../../../lib/pointer/common');
+var each = require('../../helper').each;
 
 
 // map of nodetype simplification
@@ -27,7 +27,7 @@ function map_nodes(nodes) {
 function test_compiler(definitions) {
   var tests = {};
 
-  Common.each(definitions, function (expected, route) {
+  each(definitions, function (expected, route) {
     tests["Route: '" + route + "'"] = function () {
       var ast = Compiler.compile(route);
       Assert.deepEqual(map_nodes(ast), expected);

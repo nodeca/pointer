@@ -1,12 +1,7 @@
 'use strict';
 
 
-var Common = module.exports = {};
-
-
-// iterates through all object keys-value pairs calling iterator on each one
-// example: $$.each(objOrArr, function (val, key) { /* ... */ });
-Common.each = function each(obj, iterator, ctx) {
+module.exports.each = function each(obj, iterator, ctx) {
   var key, i, len;
 
   // skip falsy objects

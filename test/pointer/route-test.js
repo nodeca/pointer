@@ -159,7 +159,7 @@ require('vows').describe('Pointer.Route').addBatch({
   'With duplicate parameter name': {
     'should throw an Error': function () {
       Assert.throws(function () {
-        var route = new Route('/f{id}/t{id}', {});
+        return new Route('/f{id}/t{id}', {});
       }, Error);
     }
   }

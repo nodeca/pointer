@@ -1297,7 +1297,7 @@ function isArray(arr) {
 }
 
 
-function reduce(obj, accumulator){
+function reduce(obj, accumulator) {
   var i     = 0,
       l     = +obj.length,
       curr  = arguments[2];
@@ -1332,8 +1332,8 @@ function promote(parent, key) {
 function keys(obj) {
   var arr = [], prop;
 
-  for ( prop in obj ) {
-    if ( obj.hasOwnProperty(prop) ) {
+  for (prop in obj) {
+    if (obj.hasOwnProperty(prop)) {
       arr.push(prop);
     }
   }
@@ -1442,10 +1442,10 @@ function lastBraceInKey(str) {
 
 
 function parseString(str) {
-  return reduce(String(str).split(/&|;/), function(ret, pair) {
+  return reduce(String(str).split(/&|;/), function (ret, pair) {
     try {
       pair = decodeURIComponent(pair.replace(/\+/g, ' '));
-    } catch(e) {
+    } catch (e) {
       // ignore
     }
 
@@ -1467,14 +1467,14 @@ function parseString(str) {
 }
 
 
-function parseUri( url, strictMode ) {
-  var str = decodeURI( url ),
-      res = parser[ strictMode || false ? 'strict_re' : 'loose_re' ].exec( str ),
-      uri = { attr : {}, param : {}, seg : {} },
+function parseUri(url, strictMode) {
+  var str = decodeURI(url),
+      res = parser[strictMode || false ? 'strict_re' : 'loose_re'].exec(str),
+      uri = {attr: {}, param: {}, seg: {}},
       i   = 14;
 
-  while ( i-- ) {
-    uri.attr[ parser.keys[i] ] = res[i] || '';
+  while (i--) {
+    uri.attr[parser.keys[i]] = res[i] || '';
   }
 
   // build query and fragment parameters
@@ -1482,8 +1482,8 @@ function parseUri( url, strictMode ) {
   uri.param['fragment'] = parseString(uri.attr['fragment']);
 
   // split path and fragement into segments
-  uri.seg['path']     = uri.attr.path.replace(/^\/+|\/+$/g,'').split('/');
-  uri.seg['fragment'] = uri.attr.fragment.replace(/^\/+|\/+$/g,'').split('/');
+  uri.seg['path']     = uri.attr.path.replace(/^\/+|\/+$/g, '').split('/');
+  uri.seg['fragment'] = uri.attr.fragment.replace(/^\/+|\/+$/g, '').split('/');
 
   // compile a 'base' domain attribute
   uri.attr['base'] = uri.attr.host || '';
@@ -1501,7 +1501,7 @@ function parseUri( url, strictMode ) {
   return uri;
 }
 
-module.exports = function purl( url, strictMode ) {
+module.exports = function purl(url, strictMode) {
   url         = String(url);
   strictMode  = !!strictMode;
 
@@ -1510,23 +1510,23 @@ module.exports = function purl( url, strictMode ) {
     data : parseUri(url, strictMode),
 
     // get various attributes from the URI
-    attr : function( attr ) {
+    attr : function (attr) {
       return typeof attr !== 'undefined' ? this.data.attr[attr] : this.data.attr;
     },
 
     // return query string parameters
-    param : function( param ) {
+    param : function (param) {
       return typeof param !== 'undefined' ? this.data.param.query[param] : this.data.param.query;
     },
 
     // return fragment parameters
-    fparam : function( param ) {
+    fparam : function (param) {
       return typeof param !== 'undefined' ? this.data.param.fragment[param] : this.data.param.fragment;
     },
 
     // return path segments
-    segment : function( seg ) {
-      if ( typeof seg === 'undefined' ) {
+    segment : function (seg) {
+      if (typeof seg === 'undefined') {
         return this.data.seg.path;
       } else {
         seg = seg < 0 ? this.data.seg.path.length + seg : seg - 1; // negative segments count from the end
@@ -1535,8 +1535,8 @@ module.exports = function purl( url, strictMode ) {
     },
 
     // return fragment segments
-    fsegment : function( seg ) {
-      if ( typeof seg === 'undefined' ) {
+    fsegment : function (seg) {
+      if (typeof seg === 'undefined') {
         return this.data.seg.fragment;
       } else {
         seg = seg < 0 ? this.data.seg.fragment.length + seg : seg - 1; // negative segments count from the end

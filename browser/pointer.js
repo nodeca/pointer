@@ -26,8 +26,11 @@ var Pointer = window.Pointer = (function () {
 'use strict';
 
 
-var Route = require("1");
-var URL   = require("2");
+var Route         = require("1");
+var Group         = require("2");
+var URL           = require("3");
+var find          = require("4").find;
+var getSortedKeys = require("4").getSortedKeys;
 
 
 /**
@@ -64,7 +67,7 @@ function Pointer(routes) {
   //        groups: {
   //          '': { // path
   //            re: null,
-  //            routes: [ Route(), ... ]
+  //            routes: Group(Route(), ...)
   //          }
   //        },
   //        cachedGroupsKeys: [ '' ]
@@ -73,11 +76,11 @@ function Pointer(routes) {
   //        groups: {
   //          '': {
   //            re: null,
-  //            routes: [ Route(), ... ]
+  //            routes: Group(Route(), ...)
   //          },
   //          '/admin': {
   //            re: /^\/admin/,
-  //            routes: [ Route(), ... ]
+  //            routes: Group(Route(), ...)
   //          }
   //        },
   //        cachedGroupsKeys: [ '/admin', '' ]
@@ -122,34 +125,6 @@ function getURLParts(url) {
     host:   parsed.attr('host') || '*',
     path:   parsed.attr('relative') || ''
   };
-}
-
-
-// returns object's keys sorted alphabeticaly in descending order
-//
-//    getSortedKeys({ a: 1, cba: 2, ba: 3 });
-//    // -> [ 'cba', 'ba', 'a' ]
-//
-function getSortedKeys(obj) {
-  var keys = [], k;
-
-  for (k in obj) {
-    if (obj.hasOwnProperty(k)) {
-      keys.push(k);
-    }
-  }
-
-  return keys.sort(function (a, b) {
-    a = String(a).length;
-    b = String(b).length;
-
-    if (a === b) {
-      return 0;
-    }
-
-    // longest strings comes first
-    return (a > b) ? -1 : 1;
-  });
 }
 
 
@@ -221,7 +196,7 @@ Pointer.prototype.addRoute = function addRoute(pattern, options) {
   if (!store[host][proto].groups[path]) {
     store[host][proto].groups[path] = {
       re:     prefix.path ? new RegExp('^' + prefix.path) : null,
-      routes: []
+      routes: new Group()
     };
 
     // rebuild groups keys cache
@@ -232,24 +207,6 @@ Pointer.prototype.addRoute = function addRoute(pattern, options) {
 
   return route;
 };
-
-
-// iterates through array calling iterator on each element.
-// stops as soon as iterator return non-falsy value, and returns this value
-//
-function find(arr, iter) {
-  var i, l, result;
-
-  for (i = 0, l = arr.length; i < l; i++) {
-    result = iter(arr[i]);
-
-    if (result) {
-      return result;
-    }
-  }
-
-  return result;
-}
 
 
 /**
@@ -303,9 +260,7 @@ Pointer.prototype.match = function match(url) {
         }
 
         // scan routes
-        return find(group.routes, function (route) {
-          return route.match(path);
-        });
+        return group.routes.match(path);
       });
     });
   }) || null;
@@ -379,9 +334,9 @@ module.exports = Pointer;
 'use strict';
 
 
-var URLBuilder  = require("3");
-var URLMatcher  = require("4");
-var Compiler    = require("5");
+var URLBuilder  = require("5");
+var URLMatcher  = require("6");
+var Compiler    = require("7");
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -474,10 +429,9 @@ var Compiler    = require("5");
  *      }
  **/
 function Route(pattern, params, meta, prefix) {
-  var ast = Compiler.compile(pattern);
-
-  this.__builder__  = new URLBuilder(ast, params);
-  this.__matcher__  = new URLMatcher(ast, params);
+  this.__ast__      = Compiler.compile(pattern);
+  this.__builder__  = new URLBuilder(this.__ast__, params);
+  this.__matcher__  = new URLMatcher(this.__ast__, params);
   this.__meta__     = meta;
   this.__prefix__   = String(prefix || '');
 }
@@ -520,7 +474,7 @@ module.exports = Route;
 
     return this.exports;
   });
-  this.def("3", function (require) {
+  this.def("5", function (require) {
     var module = this, exports = this.exports;
 
     'use strict';
@@ -531,12 +485,12 @@ module.exports = Route;
 
 
 function StringBuilderNode(node) {
-  this.value = node.string;
+  this.val = node.string;
 }
 
 
 StringBuilderNode.prototype.build = function (/* params */) {
-  return this.value;
+  return this.val;
 };
 
 
@@ -552,19 +506,6 @@ ParamBuilderNode.prototype.build = function (params) {
 
 function is_regexp(obj) {
   return '[object RegExp]' === Object.prototype.toString.call(obj);
-}
-
-
-function get_regexp(params, key) {
-  var options = params[key];
-
-  if (is_regexp(options)) {
-    return options;
-  } else if (options && is_regexp(options.match)) {
-    return options.match;
-  }
-
-  return (/[^\/]+?/);
 }
 
 
@@ -614,9 +555,8 @@ function Builder(ast, params) {
       this.__builders__.push(new StringBuilderNode(node));
     } else if ('param' === node.type) {
       this.__known_params__.push({
-        key:    node.key,
-        regexp: get_regexp(params, node.key),
-        value:  get_value(params, node.key)
+        key: node.key,
+        val: get_value(params, node.key)
       });
       this.__builders__.push(new ParamBuilderNode(node));
     } else {
@@ -638,7 +578,7 @@ Builder.prototype.build = function (params) {
     obj = this.__known_params__[i];
     val = params[obj.key];
 
-    if ('undefined' === typeof val || !obj.regexp.test(val) || (obj.value && val === obj.value)) {
+    if ('undefined' === typeof val || (obj.val && val === obj.val)) {
       return null;
     }
   }
@@ -662,7 +602,7 @@ module.exports = Builder;
 
     return this.exports;
   });
-  this.def("4", function (require) {
+  this.def("6", function (require) {
     var module = this, exports = this.exports;
 
     'use strict';
@@ -796,14 +736,14 @@ module.exports = Matcher;
 
     return this.exports;
   });
-  this.def("5", function (require) {
+  this.def("7", function (require) {
     var module = this, exports = this.exports;
 
     'use strict';
 
 
-var AST = require("6");
-var Parser = require("7").parser;
+var AST = require("8");
+var Parser = require("9").parser;
 
 
 // Propose our AST as `yy` variable to JISON
@@ -818,7 +758,7 @@ module.exports.compile = function compile(route) {
 
     return this.exports;
   });
-  this.def("6", function (require) {
+  this.def("8", function (require) {
     var module = this, exports = this.exports;
 
     'use strict';
@@ -847,7 +787,7 @@ AST.OptionalGroupNode = function (nodes) {
 
     return this.exports;
   });
-  this.def("7", function (require) {
+  this.def("9", function (require) {
     var module = this, exports = this.exports;
 
     /* Jison generated parser */
@@ -1214,6 +1154,126 @@ if (typeof module !== 'undefined' && require.main === module) {
     return this.exports;
   });
   this.def("2", function (require) {
+    var module = this, exports = this.exports;
+
+    'use strict';
+
+
+var find          = require("4").find;
+var getSortedKeys = require("4").getSortedKeys;
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+function Group() {
+  this.__routes__ = {};
+  this.__indexRegexp__ = null;
+}
+
+
+//  Group#push(route) -> Void
+//  - route (Route):
+//
+//  Adds `route` to the group.
+//
+Group.prototype.push = function push(route) {
+  var index = '', keys;
+
+  if ('string' === route.__ast__[0].type) {
+    index = route.__ast__[0].string;
+  }
+
+  if (!this.__routes__[index]) {
+    this.__routes__[index] = [];
+  }
+
+  this.__routes__[index].push(route);
+
+  // rebuild index regexp
+  keys = getSortedKeys(this.__routes__);
+  this.__indexRegexp__ = new RegExp('^(?:' + keys.join('|') + ')');
+
+  return;
+};
+
+
+//  Group#match(path) -> Object|Void
+//  - path (String):
+//
+//  Returns first matching route data.
+//
+Group.prototype.match = function match(path) {
+  var index = (this.__indexRegexp__.exec(path) || [])[0];
+
+  return find(this.__routes__[index], function (route) {
+    return route.match(path);
+  });
+};
+
+
+// MODULE EXPORTS //////////////////////////////////////////////////////////////
+
+
+module.exports = Group;
+
+
+    return this.exports;
+  });
+  this.def("4", function (require) {
+    var module = this, exports = this.exports;
+
+    'use strict';
+
+
+// iterates through array calling iterator on each element.
+// stops as soon as iterator return non-falsy value, and returns this value
+//
+module.exports.find = function find(arr, iter) {
+  var i, l, result;
+
+  // make sure arr is an array
+  arr = arr || [];
+
+  for (i = 0, l = arr.length; i < l && !result; i++) {
+    result = iter(arr[i]);
+  }
+
+  return result;
+};
+
+
+// returns object's keys sorted alphabeticaly in descending order
+//
+//    getSortedKeys({ a: 1, cba: 2, ba: 3 });
+//    // -> [ 'cba', 'ba', 'a' ]
+//
+module.exports.getSortedKeys = function getSortedKeys(obj) {
+  var keys = [], k;
+
+  for (k in obj) {
+    if (obj.hasOwnProperty(k)) {
+      keys.push(k);
+    }
+  }
+
+  return keys.sort(function (a, b) {
+    a = String(a).length;
+    b = String(b).length;
+
+    if (a === b) {
+      return 0;
+    }
+
+    // longest strings comes first
+    return (a > b) ? -1 : 1;
+  });
+};
+
+
+    return this.exports;
+  });
+  this.def("3", function (require) {
     var module = this, exports = this.exports;
 
     'use strict';

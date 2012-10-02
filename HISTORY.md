@@ -1,4 +1,4 @@
-0.0.1 / 2012-02-26
+0.1.0 / 2012-10-02
 ------------------
 
-- First public release
+- First public release.

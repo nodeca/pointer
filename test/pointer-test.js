@@ -7,6 +7,15 @@ var Pointer = require('..');
 
 
 var pointer = new Pointer({
+  '/articles/{id}(-{page})(.{format})': {
+    name: 'article',
+    params: {
+      id: /\d+?/,
+      page: /\d+?/,
+      format: 'html'
+    }
+  },
+
   '/articles/{id}(-{slug}(-{page}))(.{format})': {
     name: 'article',
     params: {
@@ -15,15 +24,6 @@ var pointer = new Pointer({
         match: /\d+?/,
         default: 1
       },
-      format: 'html'
-    }
-  },
-
-  '/articles/{id}(-{page})(.{format})': {
-    name: 'article',
-    params: {
-      id: /\d+?/,
-      page: /\d+?/,
       format: 'html'
     }
   },
@@ -119,8 +119,8 @@ require('vows').describe('Pointer').addBatch({
       }
     }),
 
-    'respests param matchers': test_generated_links({
-      null: {
+    'does not respects param matchers': test_generated_links({
+      '/articles/foo-bar': {
         name: 'article',
         params: {id: 'foo', page: 'bar', format: 'html'}
       }
@@ -142,24 +142,17 @@ require('vows').describe('Pointer').addBatch({
       }
     }),
 
-    'allow omit optinal params': test_generated_links({
+    'allow omit optional params': test_generated_links({
       '/f123': {
         name:   'forum.threads',
         params: {id: 123}
       }
     }),
 
-    'skips optinal params with default value': test_generated_links({
+    'skips optional params with default value': test_generated_links({
       '/f123': {
         name:   'forum.threads',
         params: {id: 123, page: 1}
-      }
-    }),
-
-    'skips optinal params with invalid value': test_generated_links({
-      '/f123': {
-        name:   'forum.threads',
-        params: {id: 123, page: 'abc'}
       }
     })
   },

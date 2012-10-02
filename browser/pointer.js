@@ -18,7 +18,7 @@ var Pointer = window.Pointer = (function () {
   this.def("0", function (require) {
     var module = this, exports = this.exports;
 
-/**
+    /**
  *  class Pointer
  **/
 
@@ -26,9 +26,8 @@ var Pointer = window.Pointer = (function () {
 'use strict';
 
 
-var each  = require("1").each;
-var Route = require("2");
-var URL   = require("3");
+var Route = require("1");
+var URL   = require("2");
 
 
 /**
@@ -43,38 +42,62 @@ var URL   = require("3");
  *  - [[Pointer#addRoute]]
  **/
 function Pointer(routes) {
-  // all routes grouped by prefixes
-  //
-  //  {
-  //    '*': [ Route(), ... ],
-  //    '//example.com': [ Route(), ... ]
-  //  }
-  //
-  this.__routes__ = {};
+  var k;
 
-  // cache of RegExps for known prefixes, grouped by host and protocol:
+  // all routes grouped by prefixes (mount points, see addRoute):
+  //
+  //    https://example.com/foobar
+  //      -> { proto: 'https', host: 'example.com', path: '/foobar' }
+  //
+  //    https://example.com
+  //      -> { proto: 'https', host: 'example.com', path: '' }
+  //
+  //    //example.com
+  //      -> { proto: '*', host: 'example.com', path: '' }
+  //
+  //    /foobar
+  //      -> { proto: '*', host: '*', path: '/foobar' }
   //
   //  {
-  //    'example.com': {
-  //      'https': {
-  //        'https://users.example.com': null,
+  //    'example.com': { // host
+  //      'https': { // proto
+  //        groups: {
+  //          '': { // path
+  //            re: null,
+  //            routes: [ Route(), ... ]
+  //          }
+  //        },
+  //        cachedGroupsKeys: [ '' ]
   //      },
-  //      '*': { // any protocol
-  //        '//example.com': null,
-  //        '//example.com/admin': /^\/admin/
+  //      '*': {
+  //        groups: {
+  //          '': {
+  //            re: null,
+  //            routes: [ Route(), ... ]
+  //          },
+  //          '/admin': {
+  //            re: /^\/admin/,
+  //            routes: [ Route(), ... ]
+  //          }
+  //        },
+  //        cachedGroupsKeys: [ '/admin', '' ]
   //      }
   //    }
   //  }
   //
-  this.__prefixes__ = {};
+  this.__routes__ = {};
 
   // routes grouped by names (needed for linkTo)
   this.__named_routes__ = {};
 
   // prefill routes if map provided
-  each(routes, function (options, pattern) {
-    this.addRoute(pattern, options);
-  }, this);
+  if (routes) {
+    for (k in routes) {
+      if (routes.hasOwnProperty(k)) {
+        this.addRoute(k, routes[k]);
+      }
+    }
+  }
 }
 
 
@@ -86,17 +109,6 @@ function Pointer(routes) {
 Pointer.create = function create(routes) {
   return new Pointer(routes);
 };
-
-
-// helper to lazily initialize named stack inside object and push value into it
-//
-function lazyStackPush(obj, name, value) {
-  if (!obj[name]) {
-    obj[name] = [];
-  }
-
-  obj[name].push(value);
-}
 
 
 // helper to parse URL into proto, host and path respecting our internal
@@ -113,14 +125,31 @@ function getURLParts(url) {
 }
 
 
-// prepares and saves regexp for the prefix under internal cache
+// returns object's keys sorted alphabeticaly in descending order
 //
-function setPrefixRegExp(store, prefix) {
-  var parsed = getURLParts(prefix);
+//    getSortedKeys({ a: 1, cba: 2, ba: 3 });
+//    // -> [ 'cba', 'ba', 'a' ]
+//
+function getSortedKeys(obj) {
+  var keys = [], k;
 
-  store = store[parsed.host] || (store[parsed.host] = {});
-  store = store[parsed.proto] || (store[parsed.proto] = {});
-  store[prefix] = parsed.path ? new RegExp('^' + parsed.path) : null;
+  for (k in obj) {
+    if (obj.hasOwnProperty(k)) {
+      keys.push(k);
+    }
+  }
+
+  return keys.sort(function (a, b) {
+    a = String(a).length;
+    b = String(b).length;
+
+    if (a === b) {
+      return 0;
+    }
+
+    // longest strings comes first
+    return (a > b) ? -1 : 1;
+  });
 }
 
 
@@ -142,8 +171,6 @@ function setPrefixRegExp(store, prefix) {
  *      detailed information.
  *
  *  -   *prefix*  (Optional, String): think of it as of mount point.
- *      You can use `prefix()` as well, which is a syntax sugar
- *      that sets this option.
  *
  *  -   *params*  (Optional, Object): options of params in the route.
  *      See [[Route.new]] for details.
@@ -157,94 +184,117 @@ function setPrefixRegExp(store, prefix) {
  *  - [[Route.new]]
  **/
 Pointer.prototype.addRoute = function addRoute(pattern, options) {
-  var route;
+  var route,
+      prefix  = getURLParts(options.prefix || ''),
+      host    = prefix.host,
+      proto   = prefix.proto,
+      path    = prefix.path,
+      store   = this.__routes__;
 
   options = options || {};
   route   = new Route(pattern, options.params, options.meta, options.prefix);
 
-  // save route under prefix (* - means no prefix)
-  lazyStackPush(this.__routes__, options.prefix || '*', route);
+  //
+  // save named route for linkTo
+  //
 
-  // save named route
   if (options.name) {
-    lazyStackPush(this.__named_routes__, options.name, route);
+    if (!this.__named_routes__[options.name]) {
+      this.__named_routes__[options.name] = [];
+    }
+
+    this.__named_routes__[options.name].push(route);
   }
 
-  if (options.prefix) {
-    setPrefixRegExp(this.__prefixes__, options.prefix);
+  //
+  // save route under corresponding host/port
+  //
+
+  if (!store[host]) {
+    store[host] = {};
   }
+
+  if (!store[host][proto]) {
+    store[host][proto] = { groups: {} };
+  }
+
+  if (!store[host][proto].groups[path]) {
+    store[host][proto].groups[path] = {
+      re:     prefix.path ? new RegExp('^' + prefix.path) : null,
+      routes: []
+    };
+
+    // rebuild groups keys cache
+    store[host][proto].cachedGroupsKeys = getSortedKeys(store[host][proto].groups);
+  }
+
+  store[host][proto].groups[path].routes.push(route);
 
   return route;
 };
-
-
-// returns protocol|host alternatives where to search prefix regexps
-//
-function variants(str) {
-  return '*' === str ? [ '*' ] : [ str, '*' ];
-}
-
-
-// returns object's keys sorted alphabeticaly in descending order
-//
-function getSortedKeys(obj) {
-  var keys = [], k;
-
-  for (k in obj) {
-    if (obj.hasOwnProperty(k)) {
-      keys.push(k);
-    }
-  }
-
-  keys.sort();
-  keys.reverse();
-
-  return keys;
-}
 
 
 // iterates through array calling iterator on each element.
 // stops as soon as iterator return non-falsy value, and returns this value
 //
 function find(arr, iter) {
-  var result;
+  var i, l, result;
 
-  each(arr, function (val) {
-    result = iter(val);
-    return !result;
-  });
+  for (i = 0, l = arr.length; i < l; i++) {
+    result = iter(arr[i]);
+
+    if (result) {
+      return result;
+    }
+  }
 
   return result;
 }
 
 
 /**
- *  Pointer#match(url) -> MatchData|Null
+ *  Pointer#match(url) -> Object|Null
  *  - url (String): URL to find mathing route for.
  *
  *  Returns first matching route or false if none found.
- *  See [[Route#match]] for details of _MatchData_ object.
+ *  See [[Route#match]] for details of matched data Object.
  **/
 Pointer.prototype.match = function match(url) {
-  var self = this,
-      data = getURLParts(url);
+  var self = this, data = getURLParts(url);
 
-  return find(variants(data.host), function (host) {
-    if (!self.__prefixes__[host]) {
+  // if hostname is given, try it first, and then fallback to '*', e.g.:
+  //
+  // for 'http://example.com/foobar', try 'example.com' and then '*'
+  // for '/foobar', try '*' only
+  var host_variants = ('*' === data.host) ? [ '*' ] : [ data.host, '*' ];
+
+  // if protocol is given, try it first, and then then fallback to '*', e.g.:
+  //
+  // for 'http://example.com/foobar', try 'http' and then '*'
+  // for '//example.com/foobar' and '/foobar', try '*' only
+  var proto_variants = ('*' === data.proto) ? [ '*' ] : [ data.proto, '*' ];
+
+  // scan hosts
+  return find(host_variants, function (host) {
+    if (!self.__routes__[host]) {
       return;
     }
 
-    return find(variants(data.proto), function (proto) {
-      if (!self.__prefixes__[host][proto]) {
+    // scan protocols
+    return find(proto_variants, function (proto) {
+      var store = self.__routes__[host][proto];
+
+      if (!store) {
         return;
       }
 
-      return find(getSortedKeys(self.__prefixes__[host][proto]), function (prefix) {
-        var path = data.path;
+      // scan paths
+      return find(store.cachedGroupsKeys, function (prefix) {
+        var group = store.groups[prefix], path = data.path;
 
         // prefix can be a regexp of path or null
-        if (null !== self.__prefixes__[host][proto][prefix]) {
-          path = path.replace(self.__prefixes__[host][proto][prefix], '');
+        if (null !== group.re) {
+          path = path.replace(group.re, '');
 
           // prefix regexp removed nothing - that means it does not match path
           if (path === data.path) {
@@ -252,13 +302,12 @@ Pointer.prototype.match = function match(url) {
           }
         }
 
-        return find(self.__routes__[prefix], function (route) {
+        // scan routes
+        return find(group.routes, function (route) {
           return route.match(path);
         });
       });
     });
-  }) || find(self.__routes__['*'], function (route) {
-    return route.match(data.path) || route.match(url);
   }) || null;
 };
 
@@ -268,9 +317,7 @@ Pointer.prototype.match = function match(url) {
  *  - name (String): Name of the URL (or group of URLs).
  *  - params (Object): Params to feed to URL builder.
  *
- *  Creates pretty URL for the route registered with given `name` and if
- *  [[Route#isValidParams]] of that route is positive.
- *
+ *  Creates pretty URL for the route registered with given `name`.
  *  If there were several routes registered with such `name`, the one that
  *  produce the longest URL is used.
  *
@@ -280,58 +327,9 @@ Pointer.prototype.match = function match(url) {
  *  - [[Route#buildURL]]
  **/
 Pointer.prototype.linkTo = function linkTo(name, params) {
-  var url = null;
-
-  // find route thet returns longest URL with given params
-  each(this.__named_routes__[name], function (route) {
-    var tmp;
-
-    // validate params for the route
-    if (route.isValidParams(params)) {
-      tmp = route.buildURL(params);
-      // we want return the longest matching
-      if (null === url || url.length < tmp.length) {
-        url = tmp;
-      }
-    }
-  });
-
-  return url;
-};
-
-
-/**
- *  Pointer.createLinkBuilder(pattern[, params]) -> Function
- *  - pattern (String): Pattern as for [[Route.new]]
- *  - params (Object): Params as for [[Route.new]]
- *
- *  Returns function that can be used to build URL for given `pattern` with
- *  provided `params`.
- *
- *
- *  ##### Builder signature
- *
- *      function builder(params) -> String|Null
- *
- *
- *  ##### Example
- *
- *      var builder = Pointer.createLinkBuilder('/foo/{bar}', {
- *        bar: /[a-z]+/
- *      });
- *
- *      builder();              // -> null
- *      builder({bar: 123});    // -> null
- *      builder({bar: 'abc'});  // -> '/foo/abc'
- **/
-Pointer.createLinkBuilder = function createLinkBuilder(pattern, params) {
-  var r;
-
-  // proxy to URL builder via detached route
-  r = new Route(pattern, params);
-  return function (params) {
-    return r.buildURL(params || {});
-  };
+  return find(this.__named_routes__[name] || [], function (route) {
+    return route.buildURL(params);
+  }) || null;
 };
 
 
@@ -373,50 +371,7 @@ module.exports = Pointer;
   this.def("1", function (require) {
     var module = this, exports = this.exports;
 
-'use strict';
-
-
-var Common = module.exports = {};
-
-
-// iterates through all object keys-value pairs calling iterator on each one
-// example: $$.each(objOrArr, function (val, key) { /* ... */ });
-Common.each = function each(obj, iterator, ctx) {
-  var key, i, len;
-
-  // skip falsy objects
-  if (!obj) {
-    return;
-  }
-
-  ctx = ctx || iterator;
-
-  if ('[object Array]' !== Object.prototype.toString.apply(obj)) {
-    // iterate through objects
-    for (key in obj) {
-      if (obj.hasOwnProperty(key) && false === iterator.call(ctx, obj[key], key)) {
-        return;
-      }
-    }
-  } else {
-    len = obj.length;
-
-    // iterate through array
-    for (i = 0; i < len; i += 1) {
-      if (false === iterator.call(ctx, obj[i], i)) {
-        return;
-      }
-    }
-  }
-};
-
-
-    return this.exports;
-  });
-  this.def("2", function (require) {
-    var module = this, exports = this.exports;
-
-/** internal
+    /** internal
  *  class Route
  **/
 
@@ -424,72 +379,21 @@ Common.each = function each(obj, iterator, ctx) {
 'use strict';
 
 
-var URLBuilder  = require("4");
+var URLBuilder  = require("3");
+var URLMatcher  = require("4");
 var Compiler    = require("5");
-var each        = require("1").each;
 
 
-// returns param internal config definition
-function define_param(idx, requiredFlag, defaultValue, re) {
-  return {
-    "idx":      idx || -1,
-    "required": !!requiredFlag,
-    "default":  defaultValue,
-    "match_re": re || /[^\/]+?/
-  };
-}
-
-
-// builds regexp recursively
-function build_regexp(self, nodes) {
-  var re = '';
-
-  each(nodes, function (node) {
-    if ('string' === node.type) {
-      // convert string to regexp-safe
-      re += node.string.replace(/([.?*+{}()\[\]])/g, '\\$1');
-      return;
-    }
-
-    if ('param' === node.type) {
-      // initial state of self.__idx__ == 0 (no capture groups)
-      // regexp's capture groups starts with 1
-      self.__idx__ += 1;
-
-      if (!self.__params__[node.key]) {
-        // define param configuration if it was not passed within
-        // params options to constructor
-        self.__params__[node.key] = define_param(self.__idx__, true);
-      } else {
-        // FIXME: Throw an error on duplicate pattern param?
-        self.__params__[node.key].idx = self.__idx__;
-        self.__params__[node.key].required = true;
-      }
-
-      re += '(' + self.__params__[node.key].match_re.source + ')';
-      return;
-    }
-
-    if ('optional' === node.type) {
-      re += '(?:' + build_regexp(self, node.nodes) + ')?';
-      return;
-    }
-
-    // THIS SHOULD NEVER HAPPEN!!!
-    throw new Error('Unknown node type: "' + node.type + '".');
-  });
-
-  return re;
-}
+////////////////////////////////////////////////////////////////////////////////
 
 
 /**
- *  new Route(pattern[[, params[, meta[, prefix]]])
+ *  new Route(pattern[, params[, meta[, prefix]]])
  *  - pattern (String): URL pattern. See description below.
  *  - params (Object): Params options. Se description below.
  *  - meta (Mixed): Meta vars to be returned as part of MatchData
  *    by [[Route#match]] on successfull matching.
- *  - prefix (String): Prepended to the URL on [[Route#buildURL]].
+ *  - prefix (String): Mount point prepended to the URL on [[Route#buildURL]].
  *
  *  Route constructor.
  *
@@ -572,29 +476,10 @@ function build_regexp(self, nodes) {
 function Route(pattern, params, meta, prefix) {
   var ast = Compiler.compile(pattern);
 
-  this.__idx__    = 0; // last param index
-  this.__params__ = {};
-  this.__prefix__ = String(prefix || '');
-
-  // prepare basic configuration of params
-  each(params, function (cfg, key) {
-    var default_val, match_re;
-
-    if ('[object RegExp]' === Object.prototype.toString.call(cfg)) {
-      match_re = cfg;
-    } else if (cfg !== Object(cfg)) {
-      default_val = cfg;
-    } else {
-      default_val = cfg['default'];
-      match_re = cfg['match'];
-    }
-
-    this.__params__[key] = define_param(0, false, default_val, match_re);
-  }, this);
-
-  this.__regexp__   = new RegExp('^' + build_regexp(this, ast) + '$');
-  this.__builder__  = new URLBuilder(ast);
+  this.__builder__  = new URLBuilder(ast, params);
+  this.__matcher__  = new URLMatcher(ast, params);
   this.__meta__     = meta;
+  this.__prefix__   = String(prefix || '');
 }
 
 
@@ -602,62 +487,15 @@ function Route(pattern, params, meta, prefix) {
  *  Route#match(url) -> Object|Null
  *  - url (String): URL to match route against
  *
- *  Returns _MatchData_ (see below) if [[Route]] matches against given `url`.
+ *  Returns `Object` with matching data (see below) if [[Route]] matches against
+ *  given `url`:
  *
- *
- *  ##### MatchedRoute
- *
- *  MatchedRoute is a structure similar to the one returned by [[Route#match]]
- *  but it also contains matched route instance as well:
- *
- *  - *route* ([[Route]]): Route self-reference.
  *  - *params* (Object): Params collected from the URL.
  *  - *meta* (Mixed): Meta data associated with route.
  **/
 Route.prototype.match = function match(url) {
-  var data, captures = String(url).match(this.__regexp__);
-
-  if (captures) {
-    data = {route: this, params: {}, meta: this.__meta__};
-
-    // build params hash from capture groups
-    each(this.__params__, function (cfg, key) {
-      var val = captures[cfg.idx];
-      data.params[key] = ('undefined' === typeof val) ? cfg['default'] : val;
-    });
-
-    return data;
-  }
-
-  // route not match
-  return null;
-};
-
-
-/**
- *  Route#isValidParams(params) -> Boolean
- *  - params (Object): Params to validate.
- *
- *  Tells whenever given `params` object is valid for route or not.
- **/
-Route.prototype.isValidParams = function isValidParams(params) {
-  var is_valid = true;
-
-  // make sure params is an object
-  params = params || {};
-
-  // verify that given params contains all keys of pattern
-  // and that they match associated regexp matchers
-  each(this.__params__, function (cfg, key) {
-    if (cfg.required &&
-        ('undefined' === typeof params[key] ||
-         !cfg.match_re.test(params[key]))) {
-      is_valid = false;
-      return false;
-    }
-  });
-
-  return is_valid;
+  var params = this.__matcher__.match(url);
+  return !params ? null : { params: params, meta: this.__meta__ };
 };
 
 
@@ -682,13 +520,10 @@ module.exports = Route;
 
     return this.exports;
   });
-  this.def("4", function (require) {
+  this.def("3", function (require) {
     var module = this, exports = this.exports;
 
-'use strict';
-
-
-var Common = require("1");
+    'use strict';
 
 
 // Node builders. Implements same interface as Builder
@@ -715,12 +550,47 @@ ParamBuilderNode.prototype.build = function (params) {
 };
 
 
+function is_regexp(obj) {
+  return '[object RegExp]' === Object.prototype.toString.call(obj);
+}
+
+
+function get_regexp(params, key) {
+  var options = params[key];
+
+  if (is_regexp(options)) {
+    return options;
+  } else if (options && is_regexp(options.match)) {
+    return options.match;
+  }
+
+  return (/[^\/]+?/);
+}
+
+
+function get_value(params, key) {
+  var options = params[key];
+
+  if (options && options['default']) {
+    return options['default'];
+  }
+
+  if (!is_regexp(options)) {
+    return options;
+  }
+
+  return;
+}
+
+
 //  new Builder(ast)
 //  - ast (Array): Array of nodes as returned by Compiler
 //
 //  Creates instance of builder that can render route with given params
 //  See [[Builder#build]].
-function Builder(ast) {
+function Builder(ast, params) {
+  var i, l, node;
+
   // array of param names found in the AST
   // used to validate params in [[Builder#build]]
   this.__known_params__ = [];
@@ -728,30 +598,32 @@ function Builder(ast) {
   // stack of node builders / nested builders (for optional groups)
   this.__builders__     = [];
 
-  // process given ast into array of builders
-  Common.each(ast,  function (node) {
-    if ('string' === node.type) {
-      this.__builders__.push(new StringBuilderNode(node));
-      return;
-    }
+  // make sure params is an object
+  params = params || {};
 
-    if ('param' === node.type) {
-      this.__known_params__.push(node.key);
-      this.__builders__.push(new ParamBuilderNode(node));
-      return;
-    }
+  // process given ast into array of builders
+  for (i = 0, l = ast.length; i < l; i++) {
+    node = ast[i];
 
     if ('optional' === node.type) {
       // node builders implemets same interface as Builder.
       // we use `build()` method to render node, so we can
       // use nested Builder instances for optional groups
-      this.__builders__.push(new Builder(node.nodes));
-      return;
+      this.__builders__.push(new Builder(node.nodes, params));
+    } else if ('string' === node.type) {
+      this.__builders__.push(new StringBuilderNode(node));
+    } else if ('param' === node.type) {
+      this.__known_params__.push({
+        key:    node.key,
+        regexp: get_regexp(params, node.key),
+        value:  get_value(params, node.key)
+      });
+      this.__builders__.push(new ParamBuilderNode(node));
+    } else {
+      // THIS SHOULD NEVER HAPPEN!!!
+      throw new Error('Unknown node type: "' + node.type + '".');
     }
-
-    // THIS SHOULD NEVER HAPPEN!!!
-    throw new Error('Unknown node type: "' + node.type + '".');
-  }, this);
+  }
 }
 
 //  Builder#build([params]) -> String|Null
@@ -759,26 +631,24 @@ function Builder(ast) {
 //
 //  Returns URL representing route with given params.
 Builder.prototype.build = function (params) {
-  var url, is_valid = true;
+  var i, l, obj, val, url;
 
   // make sure we have enough params to build URL
-  Common.each(this.__known_params__, function (key) {
-    if ('undefined' === typeof params[key]) {
-      is_valid = false;
-      return false; // stop iterator
-    }
-  });
+  for (i = 0, l = this.__known_params__.length; i < l; i++) {
+    obj = this.__known_params__[i];
+    val = params[obj.key];
 
-  if (!is_valid) {
-    return null;
+    if ('undefined' === typeof val || !obj.regexp.test(val) || (obj.value && val === obj.value)) {
+      return null;
+    }
   }
 
   url = '';
 
   // render and concatenate all parts
-  Common.each(this.__builders__, function (builder) {
-    url += builder.build(params) || '';
-  });
+  for (i = 0, l = this.__builders__.length; i < l; i++) {
+    url += this.__builders__[i].build(params) || '';
+  }
 
   return url;
 };
@@ -792,10 +662,144 @@ module.exports = Builder;
 
     return this.exports;
   });
+  this.def("4", function (require) {
+    var module = this, exports = this.exports;
+
+    'use strict';
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+// returns param internal config definition
+function define_param(idx, requiredFlag, defaultValue, re) {
+  return {
+    "idx":      idx || -1,
+    "required": !!requiredFlag,
+    "default":  defaultValue,
+    "match_re": re || /[^\/]+?/
+  };
+}
+
+
+// builds regexp recursively
+function build_regexp(self, nodes) {
+  var i, l, node, re = '';
+
+  for (i = 0, l = nodes.length; i < l; i++) {
+    node = nodes[i];
+
+    if ('optional' === node.type) {
+      re += '(?:' + build_regexp(self, node.nodes) + ')?';
+    } else if ('string' === node.type) {
+      // make string to regexp-safe
+      re += node.string.replace(/([.?*+{}()\[\]])/g, '\\$1');
+    } else if ('param' === node.type) {
+      // initial state of self.__idx__ == 0 (no capture groups)
+      // regexp's capture groups starts with 1
+      self.__idx__ += 1;
+
+      if (!self.__params__[node.key]) {
+        // define param configuration if it was not passed within
+        // params options to constructor
+        self.__params__[node.key] = define_param(self.__idx__, true);
+      } else {
+        if (self.__params__[node.key].required) {
+          throw new Error('Duplicate parameter name ' + node.key);
+        }
+
+        self.__params__[node.key].idx = self.__idx__;
+        self.__params__[node.key].required = true;
+      }
+
+      re += '(' + self.__params__[node.key].match_re.source + ')';
+    } else {
+      // THIS SHOULD NEVER HAPPEN!!!
+      throw new Error('Unknown node type: "' + node.type + '".');
+    }
+  }
+
+  return re;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+function Matcher(ast, params) {
+  var key, cfg, default_val, match_re;
+
+  this.__idx__    = 0; // last param index
+  this.__params__ = {};
+
+  //
+  // prepare basic configuration of params
+  //
+
+  params = params || {};
+
+  for (key in params) {
+    if (params.hasOwnProperty(key)) {
+      default_val = match_re = void(0);
+
+      cfg = params[key];
+
+      if ('[object RegExp]' === Object.prototype.toString.call(cfg)) {
+        match_re = cfg;
+      } else if (cfg !== Object(cfg)) {
+        default_val = cfg;
+      } else {
+        default_val = cfg['default'];
+        match_re = cfg['match'];
+      }
+
+      this.__params__[key] = define_param(0, false, default_val, match_re);
+    }
+  }
+
+  this.__regexp__ = new RegExp('^' + build_regexp(this, ast) + '$');
+}
+
+
+//  Matcher#match(url) -> Object|Null
+//
+//  Returns found params (on match) null otherwise.
+//
+Matcher.prototype.match = function match(url) {
+  var key, cfg, val, data, captures = String(url).match(this.__regexp__);
+
+  if (captures) {
+    data = {};
+
+    // build params hash from capture groups
+    for (key in this.__params__) {
+      if (this.__params__.hasOwnProperty(key)) {
+        cfg = this.__params__[key];
+        val = captures[cfg.idx];
+        data[key] = ('undefined' === typeof val) ? cfg['default'] : val;
+      }
+    }
+
+    return data;
+  }
+
+  // route not match
+  return null;
+};
+
+
+// MODULE EXPORTS //////////////////////////////////////////////////////////////
+
+
+module.exports = Matcher;
+
+
+    return this.exports;
+  });
   this.def("5", function (require) {
     var module = this, exports = this.exports;
 
-'use strict';
+    'use strict';
 
 
 var AST = require("6");
@@ -817,7 +821,7 @@ module.exports.compile = function compile(route) {
   this.def("6", function (require) {
     var module = this, exports = this.exports;
 
-'use strict';
+    'use strict';
 
 
 var AST = module.exports = {};
@@ -846,7 +850,7 @@ AST.OptionalGroupNode = function (nodes) {
   this.def("7", function (require) {
     var module = this, exports = this.exports;
 
-/* Jison generated parser */
+    /* Jison generated parser */
 var pointer = (function(){
 var parser = {trace: function trace() { },
 yy: {},
@@ -1209,10 +1213,10 @@ if (typeof module !== 'undefined' && require.main === module) {
 
     return this.exports;
   });
-  this.def("3", function (require) {
+  this.def("2", function (require) {
     var module = this, exports = this.exports;
 
-'use strict';
+    'use strict';
 
 
 // based on Makr Perkins' JQuery URL Parser:

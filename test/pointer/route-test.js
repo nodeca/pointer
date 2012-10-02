@@ -154,5 +154,13 @@ require('vows').describe('Pointer.Route').addBatch({
         '/test[abc]*?-html': null
       }
     }
-  })
+  }),
+
+  'With duplicate parameter name': {
+    'should throw an Error': function () {
+      Assert.throws(function () {
+        var route = new Route('/f{id}/t{id}', {});
+      }, Error);
+    }
+  }
 }).export(module);

@@ -42,17 +42,17 @@ require('vows').describe('Pointer.Route.Compiler').addBatch({
   'Compiling routes into AST': test_compiler({
     '': [],
     '/foo': ['s'],
-    '/foo/{bar}': ['s','p'],
-    '/foo(/{bar})': ['s',['s','p']],
-    '/foo/{bar}(-{baz})(/(({deep}sheep)))': ['s','p',['s','p'],['s',[['p','s']]]],
+    '/foo/{bar}': ['s', 'p'],
+    '/foo(/{bar})': ['s', ['s', 'p']],
+    '/foo/{bar}(-{baz})(/(({deep}sheep)))': ['s', 'p', ['s', 'p'], ['s', [['p', 's']]]],
 
     // escaping
 
     '/foo\\{test}': ['s', 's', 's', 's'],
-    '/foo{test\\}more}': ['s','p'],
+    '/foo{test\\}more}': ['s', 'p'],
     '/foo\\(test)': ['s', 's', 's', 's'],
-    '/foo(test\\)more)': ['s',['s','s','s']],
-    '/foo(test\\)(inner)more)': ['s',['s','s',['s'],'s']],
-    '/foo/\\({a}(-{b}\\))crazzy': ['s','s','p',['s','p','s'],'s']
+    '/foo(test\\)more)': ['s', ['s', 's', 's']],
+    '/foo(test\\)(inner)more)': ['s', ['s', 's', ['s'], 's']],
+    '/foo/\\({a}(-{b}\\))crazzy': ['s', 's', 'p', ['s', 'p', 's'], 's']
   })
 }).export(module);

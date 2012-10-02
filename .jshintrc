@@ -66,6 +66,5 @@
 
   // Undocumented //////////////////////////////////////////////////////////////
 
-  "maxerr"        : 100,    // Maximum error before stopping.
-  "indent"        : 2       // Specify indentation spacing
+  "maxerr"        : 100     // Maximum error before stopping.
 }

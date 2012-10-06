@@ -1,6 +1,8 @@
 Pointer
 =======
 
+[![Build Status](https://secure.travis-ci.org/nodeca/pointer.png)](http://travis-ci.org/nodeca/pointer)
+
 Server/Client router for nodeca:
 https://github.com/nodeca/nodeca/blob/master/docs/nodeca-technical/router.md
 

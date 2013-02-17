@@ -71,8 +71,8 @@ function suite(url) {
 
 require('vows').describe('URL').addBatch({
   'Original suite': {
-    'with strict mode':     suite(URL('http://allmarkedup.com/folder/dir/index.html?item=value#foo'), true),
-    'with non-strict mode': suite(URL('http://allmarkedup.com/folder/dir/index.html?item=value#foo'), false)
+    'with strict mode':     suite(URL('http://allmarkedup.com/folder/dir/index.html?item=value#foo', true)),
+    'with non-strict mode': suite(URL('http://allmarkedup.com/folder/dir/index.html?item=value#foo', false))
   },
 
   'Pointer cases': {

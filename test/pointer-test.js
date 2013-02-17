@@ -180,5 +180,25 @@ require('vows').describe('Pointer').addBatch({
     'respects domains within prefixes': test_route_matcher({
       '//example.com/profile/ixti.html': null
     })
+  },
+
+  // https://github.com/nodeca/pointer/issues/2
+  'Matching similar routes': {
+    topic: new Pointer({
+      '/tests(/{a}(/{b}(/{c}(/{d}))))': { meta: "uno" },
+      '/tests/{a}/{b}/{c}/fun(/{d})':   { meta: "dos" }
+    }),
+
+    'should find appropriate url': 'pending'/*function (router) {
+      var match;
+
+      match = router.match("/tests/pluto");
+      Assert.isNotNull(match);
+      Assert.equal("uno", match.meta);
+
+      match = router.match("/tests/1/2/3/fun");
+      Assert.isNotNull(match);
+      Assert.equal("dos", match.meta);
+    }*/
   }
 }).export(module);

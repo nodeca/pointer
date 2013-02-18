@@ -1,166 +1,152 @@
-'use strict';
+/*global describe, it*/
 
 
-var Assert = require('assert');
-var Route = require('../../lib/pointer/route');
-var each = require('../helper').each;
+"use strict";
 
 
-function noop() {}
+var assert  = require("assert");
+var Route   = require("../../lib/pointer/route");
 
 
-function test_matching(definitions) {
-  var test = {};
+////////////////////////////////////////////////////////////////////////////////
 
-  each(definitions, function (options, pattern) {
-    var route, assertions;
 
-    route = new Route(pattern, options.params || {}, noop);
-    assertions = test['~ ' + pattern] = {};
-
-    each(options.expectations, function (expect, url) {
-      assertions[url + ' >> ' + JSON.stringify(expect)] = function () {
-        var data = route.match(url);
-
-        if (!expect || 'null' === expect) {
-          Assert.isNull(data);
-        } else {
-          Assert.isNotNull(data);
-          Assert.deepEqual(data.params, expect);
-        }
-      };
-    });
-  });
-
-  return test;
+// simple macros to test resulting `.params` of route.match if any
+function testMatch(route, url, expectedParams) {
+  var match = route.match(url);
+  assert.deepEqual(match && match.params, expectedParams);
 }
 
 
-require('vows').describe('Pointer.Route').addBatch({
-  'Routes are matched with "boundaries"': test_matching({
-    '/articles': {
-      expectations: {
-        '/articles': {},
-        '/articles/': null,
-        '/article': null
-      }
-    }
-  }),
+////////////////////////////////////////////////////////////////////////////////
 
-  'Params are required, by default': test_matching({
-    '/article/{id}': {
-      expectations: {
-        '/article/abc': {id: 'abc'},
-        '/article/123': {id: '123'},
-        '/article/': null
-      }
-    },
-    '/article/{id}/': {
-      expectations: {
-        '/article/abc/': {id: 'abc'},
-        '/article/123/': {id: '123'},
-        '/article//': null
-      }
-    }
-  }),
 
-  'Optional part may be omitted': test_matching({
-    '/article/{id}(-{slug})': {
-      expectations: {
-        '/article/123': {id: '123', slug: undefined},
-        '/article/123-foobar': {id: '123', slug: 'foobar'}
-      }
-    }
-  }),
+describe("Pointer.Route", function () {
+  describe("#match", function () {
+    it("should match with boundaries", function () {
+      var route = new Route("/articles");
 
-  'Param can have matching pattern': test_matching({
-    '/article/{id}(-{slug}).html': {
-      params: {
-        id: {match: /[0-9]{2}/},
-        slug: {match: /[a-z]*/}
-      },
-      expectations: {
-        '/article/42.html': {id: '42', slug: undefined},
-        '/article/42-.html': {id: '42', slug: ''},
-        '/article/42-testing.html': {id: '42', slug: 'testing'},
-        '/article/42-testing.html.html': null,
-        '/article/123-testing.html': null
-      }
-    }
-  }),
+      testMatch(route, "/articles/", null);
+      testMatch(route, "/articles",  {});
+    });
 
-  'Param specified as RegExp is a shorthand to match option': test_matching({
-    '/article/{id}(-{slug}).html': {
-      params: {
-        id: /[0-9]{2}/,
-        slug: /[a-z]*/
-      },
-      expectations: {
-        '/article/42.html': {id: '42', slug: undefined},
-        '/article/42-.html': {id: '42', slug: ''},
-        '/article/42-testing.html': {id: '42', slug: 'testing'},
-        '/article/42-testing.html.html': null,
-        '/article/123-testing.html': null
-      }
-    }
-  }),
 
-  'Param can have default value': test_matching({
-    '/article/{id}(-{slug})(.{format})': {
-      params: {
-        slug: {default: 'foobar'},
-        format: {default: 'html'}
-      },
-      expectations: {
-        '/article/42': {id: '42', slug: 'foobar', format: 'html'},
-        '/article/42-habahaba': {id: '42', slug: 'habahaba', format: 'html'},
-        '/article/42-habahaba.pdf': {id: '42', slug: 'habahaba', format: 'pdf'},
-        '/article/42.pdf': {id: '42', slug: 'foobar', format: 'pdf'}
-      }
-    }
-  }),
+    it("should require params", function () {
+      var route = new Route("/article/{id}");
 
-  'Param specified as non-RegExp and non-Object is a shorthand to default option': test_matching({
-    '/article/{id}(-{slug})(.{format})': {
-      params: {
-        slug: 'foobar',
-        format: 'html'
-      },
-      expectations: {
-        '/article/42': {id: '42', slug: 'foobar', format: 'html'},
-        '/article/42-habahaba': {id: '42', slug: 'habahaba', format: 'html'},
-        '/article/42-habahaba.pdf': {id: '42', slug: 'habahaba', format: 'pdf'},
-        '/article/42.pdf': {id: '42', slug: 'foobar', format: 'pdf'}
-      }
-    }
-  }),
+      testMatch(route, "/article/",     null);
+      testMatch(route, "/article/abc",  { id: "abc" });
+      testMatch(route, "/article/123",  { id: "123" });
+    });
 
-  'Params not in the route return their default values': test_matching({
-    '/article/test.{format}': {
-      params: {
-        id: {default: 42},
-        page: {match: /\d+/}
-      },
-      expectations: {
-        '/article/test.html': {format: 'html', id: 42, page: undefined}
-      }
-    }
-  }),
 
-  'RegExp keywords and metachars got escaped in strings': test_matching({
-    '/test[abc]*?.{format}': {
-      expectations: {
-        '/test[abc]*?.html': {format: 'html'},
-        '/test[abc]*?-html': null
-      }
-    }
-  }),
+    it("should allow omit optional groups", function () {
+      var route = new Route("/{id}(-{slug})");
 
-  'With duplicate parameter name': {
-    'should throw an Error': function () {
-      Assert.throws(function () {
-        return new Route('/f{id}/t{id}', {});
+      testMatch(route, "/42",     { id: "42", slug: undefined });
+      testMatch(route, "/42-bar", { id: "42", slug: "bar" });
+    });
+
+
+    it("should match param patterns", function () {
+      var route = new Route("/foo/{id}.html", {
+        id: { match: /[0-9]{2}/ }
+      });
+
+      testMatch(route, "/foo/42.html",   { id: "42" });
+      testMatch(route, "/foo/123.html",  null);
+    });
+
+
+    describe("when param is given as RegExp", function () {
+      it("should be a shorthand to `match` option", function () {
+        var route = new Route("/foo/{id}.html", { id: /[0-9]{2}/ });
+
+        testMatch(route, "/foo/42.html",   { id: "42" });
+        testMatch(route, "/foo/123.html",  null);
+      });
+    });
+
+
+    it("allows specify default value of params", function () {
+      var route = new Route("/foo/{id}(.{format})", {
+        format: { default: "html" }
+      });
+
+      testMatch(route, "/foo/42",       { id: "42", format: "html" });
+      testMatch(route, "/foo/42.json",  { id: "42", format: "json" });
+    });
+
+
+    describe("when param is given as non-Object and not RegExp", function () {
+      it("should be a shorthand to `default` option", function () {
+        var route = new Route("/foo/{id}(.{format})", { format: "html" });
+
+        testMatch(route, "/foo/42",       { id: "42", format: "html" });
+        testMatch(route, "/foo/42.json",  { id: "42", format: "json" });
+      });
+    });
+
+
+    it("should return default value of params not in the pattern", function () {
+      var route = new Route("/question.html", { answer: 42 });
+
+      testMatch(route, "/question.html", { answer: 42 });
+    });
+
+
+    it("should escape RegExp metachars", function () {
+      var route = new Route("/foo[bar]*?/baz.{format}");
+
+      testMatch(route, "/foo[bar]*?/baz.html", { format: "html" });
+    });
+
+
+    it("should throw Error on duplicate param name", function () {
+      assert.throws(function () {
+        return new Route("/f{id}/t{id}");
       }, Error);
-    }
-  }
-}).export(module);
+    });
+  });
+
+
+  describe("#buildURL", function () {
+    it("should fail if required param is missing", function () {
+      var route = new Route("/foobar/{id}");
+      assert.deepEqual(route.buildURL({}), null);
+    });
+
+
+    it("should skip missing optional groups", function () {
+      var route = new Route("/foobar/{id}(-{slug}(.{ext}))");
+
+      assert.deepEqual(route.buildURL({
+        id: 42
+      }), "/foobar/42");
+
+      assert.deepEqual(route.buildURL({
+        id:   42,
+        slug: "the-answer"
+      }), "/foobar/42-the-answer");
+
+      assert.deepEqual(route.buildURL({
+        id:   42,
+        slug: "the-answer",
+        ext:  "html"
+      }), "/foobar/42-the-answer.html");
+    });
+
+
+    // FIXME: Bug or feature???
+    it("should not respect params matcher", function () {
+      var route = new Route("/foo/{id}", { id: /\d+/ });
+      assert.deepEqual(route.buildURL({ id: "bar" }), "/foo/bar");
+    });
+
+
+    it("should preserve prefix", function () {
+      var route = new Route("/foobar/{id}", {}, {}, "//example.com");
+      assert.deepEqual(route.buildURL({ id: 42 }), "//example.com/foobar/42");
+    });
+  });
+});

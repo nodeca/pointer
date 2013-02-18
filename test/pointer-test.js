@@ -1,204 +1,62 @@
-'use strict';
+/*global describe, it*/
 
 
-var Assert = require('assert');
-var each    = require('./helper').each;
-var Pointer = require('..');
+"use strict";
 
 
-var pointer = new Pointer({
-  '/articles/{id}(-{page})(.{format})': {
-    name: 'article',
-    params: {
-      id: /\d+?/,
-      page: /\d+?/,
-      format: 'html'
-    }
-  },
-
-  '/articles/{id}(-{slug}(-{page}))(.{format})': {
-    name: 'article',
-    params: {
-      id: /\d+?/,
-      page: {
-        match: /\d+?/,
-        default: 1
-      },
-      format: 'html'
-    }
-  },
-
-  '/posts/{year}(-{month}(-{day}))-{slug}.html': {
-    name: 'post',
-    params: {
-      year: /\d+/,
-      month: /\d+/,
-      day: /\d+/
-    }
-  },
-
-  '/{year}-{month}-{day}-{slug}.html': {
-    name: 'blog',
-    prefix: '/blog'
-  },
-
-  '/{user}.html': {
-    name: 'users',
-    prefix: '//users.example.com/profile'
-  },
-
-  '/login': {
-    name: 'login',
-    prefix: 'https://example.com'
-  },
+var assert  = require("assert");
+var Pointer = require("..");
 
 
-  '/f{id}(/p{page})': {
-    name: 'forum.threads',
-    params: {
-      id: /\d+/,
-      page: {
-        match:   /\d+/,
-        default: 1
-      }
-    }
-  }
+////////////////////////////////////////////////////////////////////////////////
+
+
+describe("Pointer", function () {
+  describe("#linkTo", function () {
+    var pointer = new Pointer({
+      "/foo/{id}/index.html": { name: "foo", params: { id: /\d+?/ } },
+      "/bar/index.html":      { name: "bar" }
+    });
+
+
+    it("should respect name", function () {
+      assert.deepEqual(pointer.linkTo("foo", {}), null);
+      assert.deepEqual(pointer.linkTo("foo", { id: 42 }), "/foo/42/index.html");
+    });
+  });
+
+
+  describe("#match", function () {
+    var pointer = new Pointer({
+      "/foo/{id}": { prefix: "//example.com" }
+    });
+
+
+    it("should respect prefix", function () {
+      var match = pointer.match("//example.com/foo/42");
+      assert.deepEqual(match && match.params, { id: "42" });
+    });
+
+
+    // issue#2: https://github.com/nodeca/pointer/issues/2
+    describe("with similar routes", function () {
+      /*
+      var pointer = new Pointer({
+        "/tests(/{a}(/{b}(/{c}(/{d}))))": { meta: "uno" },
+        "/tests/{a}/{b}/{c}/fun(/{d})":   { meta: "dos" }
+      });
+
+
+      it("should find correct route", function (router) {
+        var match;
+
+        match = router.match("/tests/pluto");
+        assert.equal(match && match.meta, "uno");
+
+        match = router.match("/tests/1/2/3/fun");
+        assert.equal(match && match.meta, "dos");
+      });
+      */
+    });
+  });
 });
-
-
-function test_generated_links(definitions) {
-  var tests = {};
-
-  each(definitions, function (data, url) {
-    tests['[' + data.name + '] ' + url + ' << ' + JSON.stringify(data.params)] = function () {
-      var result = pointer.linkTo(data.name, data.params);
-
-      if (!url || 'null' === url) {
-        Assert.isNull(result);
-      } else {
-        Assert.isNotNull(result);
-        Assert.equal(result, url);
-      }
-    };
-  });
-
-  return tests;
-}
-
-
-function test_route_matcher(definitions) {
-  var tests = {};
-
-  each(definitions, function (params, url) {
-    tests[url + ' >> ' + JSON.stringify(params)] = function () {
-      var result = pointer.match(url);
-
-      if (!params || 'null' === params) {
-        Assert.isNull(result);
-      } else {
-        Assert.isNotNull(result);
-        Assert.deepEqual(result.params, params);
-      }
-    };
-  });
-
-  return tests;
-}
-
-
-require('vows').describe('Pointer').addBatch({
-  'Building links': {
-    'based on `name` to find route to build URL for': test_generated_links({
-      '/posts/2012-02-23-foobar.html': {
-        name: 'post',
-        params: {year: 2012, month: '02', day: 23, slug: 'foobar'}
-      },
-      null: {
-        name: 'post',
-        params: {id: 42, slug: 'foobar', page: 1, format: 'html'}
-      }
-    }),
-
-    'does not respects param matchers': test_generated_links({
-      '/articles/foo-bar': {
-        name: 'article',
-        params: {id: 'foo', page: 'bar', format: 'html'}
-      }
-    }),
-
-    'preserves prefix': test_generated_links({
-      '/blog/2012-02-23-foobar.html': {
-        name: 'blog',
-        params: {year: 2012, month: '02', day: 23, slug: 'foobar'}
-      },
-
-      '//users.example.com/profile/ixti.html': {
-        name: 'users',
-        params: {user: 'ixti'}
-      },
-
-      'https://example.com/login': {
-        name: 'login'
-      }
-    }),
-
-    'allow omit optional params': test_generated_links({
-      '/f123': {
-        name:   'forum.threads',
-        params: {id: 123}
-      }
-    }),
-
-    'skips optional params with default value': test_generated_links({
-      '/f123': {
-        name:   'forum.threads',
-        params: {id: 123, page: 1}
-      }
-    })
-  },
-
-  'Finding matching route': {
-    'respects default values of params': test_route_matcher({
-      '/articles/42-foobar-5.html': {id: '42', slug: 'foobar', page: '5', format: 'html'},
-      '/articles/42-foobar.html': {id: '42', slug: 'foobar', page: 1, format: 'html'},
-      '/posts/2012-foobar.html': {year: 2012, month: undefined, day: undefined, slug: 'foobar'}
-    }),
-
-    'respects prefixes': test_route_matcher({
-      '/posts/2012-02-23-foobar.html': {year: 2012, month: '02', day: 23, slug: 'foobar'},
-      '/blog/2012-02-23-foobar.html': {year: 2012, month: '02', day: 23, slug: 'foobar'}
-    }),
-
-    'respects protocols within prefixes': test_route_matcher({
-      '//users.example.com/profile/ixti.html': {user: 'ixti'},
-      'http://users.example.com/profile/ixti.html': {user: 'ixti'},
-      'https://users.example.com/profile/ixti.html': {user: 'ixti'},
-      'http://example.com/login': null,
-      'https://example.com/login': {}
-    }),
-
-    'respects domains within prefixes': test_route_matcher({
-      '//example.com/profile/ixti.html': null
-    })
-  },
-
-  // https://github.com/nodeca/pointer/issues/2
-  'Matching similar routes': {
-    topic: new Pointer({
-      '/tests(/{a}(/{b}(/{c}(/{d}))))': { meta: "uno" },
-      '/tests/{a}/{b}/{c}/fun(/{d})':   { meta: "dos" }
-    }),
-
-    'should find appropriate url': 'pending'/*function (router) {
-      var match;
-
-      match = router.match("/tests/pluto");
-      Assert.isNotNull(match);
-      Assert.equal("uno", match.meta);
-
-      match = router.match("/tests/1/2/3/fun");
-      Assert.isNotNull(match);
-      Assert.equal("dos", match.meta);
-    }*/
-  }
-}).export(module);

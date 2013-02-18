@@ -1,58 +1,59 @@
-'use strict';
+/*global describe, it*/
 
 
-var Assert = require('assert');
-var Compiler = require('../../../lib/pointer/route/compiler');
-var each = require('../../helper').each;
+"use strict";
 
 
-// map of nodetype simplification
-var tokens = {string: 's', param: 'p'};
+var assert    = require("assert");
+var Compiler  = require("../../../lib/pointer/route/compiler");
 
 
-// creates a map of node types
-function map_nodes(nodes) {
-  var map = [];
+////////////////////////////////////////////////////////////////////////////////
 
-  nodes.forEach(function (node) {
-    var ch = tokens[node.type] || '!';
-    map.push(('optional' === node.type) ? map_nodes(node.nodes) : ch);
-  });
 
-  return map;
+// map of node type simplification
+var NODES = {string: "s", param: "p"};
+
+
+// maps compiled ast into array of strings representing nodes
+function mapNodes(node) {
+  if ("optional" === node.type) {
+    return node.nodes.map(mapNodes);
+  }
+
+  return NODES[node.type] || "!";
 }
 
 
-// create compiler test
-function test_compiler(definitions) {
-  var tests = {};
 
-  each(definitions, function (expected, route) {
-    tests["Route: '" + route + "'"] = function () {
-      var ast = Compiler.compile(route);
-      Assert.deepEqual(map_nodes(ast), expected);
-    };
+// helper to test compiled ast against expected nodes list
+function testCompiler(route, expectedNodes) {
+  describe("with '" + route + "' route", function () {
+    var actualNodes = Compiler.compile(route).map(mapNodes);
+
+    it("should generate AST", function () {
+      assert.deepEqual(actualNodes, expectedNodes);
+    });
   });
-
-  return tests;
 }
 
 
-require('vows').describe('Pointer.Route.Compiler').addBatch({
-  'Compiling routes into AST': test_compiler({
-    '': [],
-    '/foo': ['s'],
-    '/foo/{bar}': ['s', 'p'],
-    '/foo(/{bar})': ['s', ['s', 'p']],
-    '/foo/{bar}(-{baz})(/(({deep}sheep)))': ['s', 'p', ['s', 'p'], ['s', [['p', 's']]]],
+////////////////////////////////////////////////////////////////////////////////
 
-    // escaping
 
-    '/foo\\{test}': ['s', 's', 's', 's'],
-    '/foo{test\\}more}': ['s', 'p'],
-    '/foo\\(test)': ['s', 's', 's', 's'],
-    '/foo(test\\)more)': ['s', ['s', 's', 's']],
-    '/foo(test\\)(inner)more)': ['s', ['s', 's', ['s'], 's']],
-    '/foo/\\({a}(-{b}\\))crazzy': ['s', 's', 'p', ['s', 'p', 's'], 's']
-  })
-}).export(module);
+describe("Pointer.Route.Compiler", function () {
+  testCompiler("",                        []);
+  testCompiler("/foo",                    ["s"]);
+  testCompiler("/foo/{bar}",              ["s", "p"]);
+  testCompiler("/foo(/{bar})",            ["s", ["s", "p"]]);
+  testCompiler("/foo/{bar}(/({baz}moo))", ["s", "p", ["s", ["p", "s"]]]);
+
+  // escaping
+
+  testCompiler("/foo\\{bar}",           ["s", "s", "s", "s"]);
+  testCompiler("/foo{bar\\}baz}",       ["s", "p"]);
+  testCompiler("/foo\\(bar)",           ["s", "s", "s", "s"]);
+  testCompiler("/foo(bar\\)baz)",       ["s", ["s", "s", "s"]]);
+  testCompiler("/foo(bar\\)(baz)moo)",  ["s", ["s", "s", ["s"], "s"]]);
+  testCompiler("/foo/\\({b}(-{a}\\))r", ["s", "s", "p", ["s", "p", "s"], "s"]);
+});

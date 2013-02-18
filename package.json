@@ -15,7 +15,7 @@
 
   "scripts"         : { "test": "make test-all" },
   "devDependencies" : {
-                        "vows"      : "~ 0.6.1",
+                        "mocha"     : "*",
                         "jison"     : "~ 0.3.2",
                         "collector" : "~ 0.0.1"
                       },

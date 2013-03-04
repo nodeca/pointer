@@ -37,4 +37,19 @@ describe("Pointer.URL", function () {
     assert.equal("1234",        parsed.attr("password"));
     assert.equal("example.com", parsed.attr("host"));
   });
+
+
+  // excessive test to make sure we have all parts correctly extracted
+  // TODO: Replace with normal tests, testing edge cases?
+  it("should correctly parse all URI parts", function () {
+    var parsed = URL("http://user:pass@example.com/path.html?key=val#anchor");
+
+    assert.equal("http",        parsed.attr("protocol"));
+    assert.equal("user",        parsed.attr("user"));
+    assert.equal("pass",        parsed.attr("password"));
+    assert.equal("example.com", parsed.attr("host"));
+    assert.equal("/path.html",  parsed.attr("path"));
+    assert.equal("key=val",     parsed.attr("query"));
+    assert.equal("anchor",      parsed.attr("fragment"));
+  });
 });

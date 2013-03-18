@@ -110,11 +110,10 @@ compile-parser:
 		echo "  $ make dev-deps" >&2 ; \
 		exit 128 ; \
 		fi
-	jison src/pointer.yy src/pointer.l && \
-		mv pointer.js lib/pointer/route/parser.js
+	jison src/pointer.yy src/pointer.l -o lib/pointer/route/parser.js -m js
+	echo -e "\nmodule.exports = { parser: parser };" >> lib/pointer/route/parser.js
 
 
 browserify:
 	rm -rf browser && mkdir browser
-	collector --export-name 'Pointer = window.Pointer' ./lib/pointer \
-		> browser/pointer.js
+	webmake --name 'Pointer' ./lib/pointer.js ./browser/pointer.js

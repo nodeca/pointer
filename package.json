@@ -17,7 +17,7 @@
   "devDependencies" : {
                         "mocha"     : "*",
                         "jison"     : "~ 0.3.2",
-                        "collector" : "~ 0.0.1"
+                        "webmake"   : "~ 0.3.14"
                       },
   "engines"         : { "node": ">= 0.6.0" }
 }

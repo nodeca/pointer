@@ -39,7 +39,7 @@ describe("Pointer", function () {
 
 
     // issue#2: https://github.com/nodeca/pointer/issues/2
-    describe.skip("with similar routes", function () {
+    describe("with similar routes", function () {
       var pointer = new Pointer({
         "/tests(/{a}(/{b}(/{c}(/{d}))))": { meta: "uno" },
         "/tests/{a}/{b}/{c}/fun(/{d})":   { meta: "dos" }

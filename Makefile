@@ -38,7 +38,7 @@ test: lint
 		echo "  $ make dev-deps" >&2 ; \
 		exit 128 ; \
 		fi
-	NODE_ENV=test mocha --recursive
+	NODE_ENV=test mocha
 
 
 doc:

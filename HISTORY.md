@@ -1,7 +1,7 @@
-0.1.3 / --
+0.1.3 / 2013-04-05
 ------------------
 
-* Fixed issue #2: matching similar routes.
+* Fixed similar routes matching (#2)
 
 
 0.1.2 / 2013-03-19

@@ -115,5 +115,10 @@ compile-parser:
 
 
 browserify:
+	@if test ! `which webmake` ; then \
+		echo "You need 'webmake' installed in order to generate browserified version." >&2 ; \
+		echo "  $ npm install -g webmake" >&2 ; \
+		exit 128 ; \
+		fi
 	rm -rf browser && mkdir browser
 	webmake --name 'Pointer' ./lib/pointer.js ./browser/pointer.js

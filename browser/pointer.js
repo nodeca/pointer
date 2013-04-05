@@ -128,7 +128,6 @@ window.Pointer = (function (modules) {
 					'use strict';
 
 
-					var find          = require('./common').find;
 					var getSortedKeys = require('./common').getSortedKeys;
 
 
@@ -137,7 +136,7 @@ window.Pointer = (function (modules) {
 
 					function Group() {
 					  this.__routes__ = {};
-					  this.__indexRegexp__ = null;
+					  this.__prefixes__ = [];
 					}
 
 
@@ -147,23 +146,18 @@ window.Pointer = (function (modules) {
 					//  Adds `route` to the group.
 					//
 					Group.prototype.push = function push(route) {
-					  var index = '', keys;
+					  var prefix = '';
 
 					  if ('string' === route.__ast__[0].type) {
-					    index = route.__ast__[0].string;
+					    prefix = route.__ast__[0].string;
 					  }
 
-					  if (!this.__routes__[index]) {
-					    this.__routes__[index] = [];
+					  if (!this.__routes__[prefix]) {
+					    this.__routes__[prefix] = [];
 					  }
 
-					  this.__routes__[index].push(route);
-
-					  // rebuild index regexp
-					  keys = getSortedKeys(this.__routes__);
-					  this.__indexRegexp__ = new RegExp('^(?:' + keys.join('|') + ')');
-
-					  return;
+					  this.__routes__[prefix].push(route);
+					  this.__prefixes__ = getSortedKeys(this.__routes__);
 					};
 
 
@@ -173,11 +167,40 @@ window.Pointer = (function (modules) {
 					//  Returns first matching route data.
 					//
 					Group.prototype.match = function match(path) {
-					  var index = (this.__indexRegexp__.exec(path) || [])[0];
+					  var self = this,
+					      prefix,
+					      prefixIndex,
+					      prefixCount,
+					      route,
+					      routeIndex,
+					      routeCount,
+					      result;
 
-					  return find(this.__routes__[index], function (route) {
-					    return route.match(path);
-					  });
+					  for (prefixIndex = 0, prefixCount = self.__prefixes__.length;
+					       prefixIndex < prefixCount;
+					       prefixIndex += 1) {
+					    prefix = self.__prefixes__[prefixIndex];
+
+					    // Match prefix. If not - go on with next prefix.
+					    if (0 !== path.indexOf(prefix)) {
+					      continue;
+					    }
+
+					    // Walk over routes by prefix and return a first matched if any.
+					    for (routeIndex = 0, routeCount = self.__routes__[prefix].length;
+					         routeIndex < routeCount;
+					         routeIndex += 1) {
+					      route = self.__routes__[prefix][routeIndex];
+					      result = route.match(path);
+
+					      if (result) {
+					        return result;
+					      }
+					    }
+					  }
+
+					  // Not found.
+					  return null;
 					};
 
 

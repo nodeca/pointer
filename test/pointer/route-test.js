@@ -50,7 +50,9 @@ describe("Pointer.Route", function () {
 
     it("should match param patterns", function () {
       var route = new Route("/foo/{id}.html", {
-        id: { match: /[0-9]{2}/ }
+        params: {
+          id: { match: /[0-9]{2}/ }
+        }
       });
 
       testMatch(route, "/foo/42.html",   { id: "42" });
@@ -61,38 +63,30 @@ describe("Pointer.Route", function () {
     it("should match anchor if present", function () {
       var route, match;
 
-      route = new Route("/foo(/{name})", "bar{id}", {
-        id: { match: /[0-9]+/ }
+      route = new Route("/foo", {
+        anchor: "bar{id}",
+        anchorParams: {
+          id: { match: /[0-9]+/ }
+        }
       });
 
-      match = route.match("/foo/joe");
-      assert.deepEqual(match && match.params, { name: 'joe', id: undefined });
-
-      match = route.match("/foo/moe", "bar42");
-      assert.deepEqual(match && match.params, { name: 'moe', id: '42' });
-    });
-
-
-    it("should properly set `hasAnchor` property in match result", function () {
-      var route, match;
-
-      route = new Route("/foo(/{name})", "bar{id}", {
-        id: { match: /[0-9]+/ }
-      });
-
-      match = route.match("/foo/joe");
+      match = route.match("/foo");
       assert(match);
-      assert.strictEqual(match.hasAnchor, false);
+      assert.strictEqual(match.anchorParams, null);
 
-      match = route.match("/foo/moe", "bar42");
+      match = route.match("/foo", "bar42");
       assert(match);
-      assert.strictEqual(match.hasAnchor, true);
+      assert.deepEqual(match.anchorParams, { id: '42' });
     });
 
 
     describe("when param is given as RegExp", function () {
       it("should be a shorthand to `match` option", function () {
-        var route = new Route("/foo/{id}.html", { id: /[0-9]{2}/ });
+        var route = new Route("/foo/{id}.html", {
+          params: {
+            id: /[0-9]{2}/
+          }
+        });
 
         testMatch(route, "/foo/42.html",   { id: "42" });
         testMatch(route, "/foo/123.html",  null);
@@ -102,7 +96,9 @@ describe("Pointer.Route", function () {
 
     it("allows specify default value of params", function () {
       var route = new Route("/foo/{id}(.{format})", {
-        format: { default: "html" }
+        params: {
+          format: { default: "html" }
+        }
       });
 
       testMatch(route, "/foo/42",       { id: "42", format: "html" });
@@ -112,7 +108,11 @@ describe("Pointer.Route", function () {
 
     describe("when param is given as non-Object and not RegExp", function () {
       it("should be a shorthand to `default` option", function () {
-        var route = new Route("/foo/{id}(.{format})", { format: "html" });
+        var route = new Route("/foo/{id}(.{format})", {
+          params: {
+            format: "html"
+          }
+        });
 
         testMatch(route, "/foo/42",       { id: "42", format: "html" });
         testMatch(route, "/foo/42.json",  { id: "42", format: "json" });
@@ -121,7 +121,11 @@ describe("Pointer.Route", function () {
 
 
     it("should return default value of params not in the pattern", function () {
-      var route = new Route("/question.html", { answer: 42 });
+      var route = new Route("/question.html", {
+        params: {
+          answer: 42
+        }
+      });
 
       testMatch(route, "/question.html", { answer: 42 });
     });
@@ -170,7 +174,7 @@ describe("Pointer.Route", function () {
 
 
     it("should add anchor only when there are some params for it", function () {
-      var route = new Route("/foo/{name}", "bar{id}");
+      var route = new Route("/foo/{name}", { anchor: "bar{id}" });
 
       assert.deepEqual(route.buildURL({
         name: "something"
@@ -185,13 +189,15 @@ describe("Pointer.Route", function () {
 
     // FIXME: Bug or feature???
     it("should not respect params matcher", function () {
-      var route = new Route("/foo/{id}", { id: /\d+/ });
+      var route = new Route("/foo/{id}", {
+        params: { id: /\d+/ }
+      });
       assert.deepEqual(route.buildURL({ id: "bar" }), "/foo/bar");
     });
 
 
     it("should preserve prefix", function () {
-      var route = new Route("/foobar/{id}", {}, {}, "//example.com");
+      var route = new Route("/foobar/{id}", { prefix: "//example.com" });
       assert.deepEqual(route.buildURL({ id: 42 }), "//example.com/foobar/42");
     });
   });

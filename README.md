@@ -17,8 +17,9 @@ API Overview
 
 // simple case
 router.addRoute('/foo/{bar}', {
-  params: { bar: /\d+/ }
-}, foobar);
+  params: { bar: /\d+/ },
+  meta: foobar
+});
 
 // route with optional param and it's default value
 router.addRoute('/f{forum_id}(-{page}).html', {
@@ -28,29 +29,33 @@ router.addRoute('/f{forum_id}(-{page}).html', {
       match: /\d+/
       default: 1
     }
-  }
-}, forum_list);
+  },
+  meta: forum_list
+});
 
 // route with optional anchor (useful for in-browser use)
 router.addRoute('/page.html', {
   anchor: 'anchor={keyword}',
-  params: {
+  anchorParams: {
     keyword: /\S+/
-  }
-}, page);
+  },
+  meta: page_handler
+});
 
 // named router (used for linkTo)
 router.addRoute('/t{thread_id}', {
   name: 'thread.list',
   params: {
     thread_id: /\d+/
-  }
-}, thread_list);
+  },
+  meta: thread_list
+});
 
 // routes grouped by prefix
 router.addRoute('/css/{file}(-{md5}).{ext}', {
-  prefix: '/assets'
-}, another_handler);
+  prefix: '/assets',
+  meta: another_handler
+});
 // -> /assets/css/{file}(-{md5}).{ext}
 
 
@@ -71,5 +76,6 @@ var match = router.match(url);
 if (match) {
   match.params; // -> object with params, e.g. {id: 123, page: undefined}
   match.meta;   // handler function
+  match.anchorParams; // -> object with params or null if anchor isn't matched
 }
 ```

@@ -47,7 +47,7 @@ describe("Pointer", function () {
       var match = pointer.match("//example.com/foo/42#anchor");
 
       assert(match);
-      assert.strictEqual(match.hasAnchor, false);
+      assert.strictEqual(match.anchorParams, null);
       assert.deepEqual(match.params, { id: "42" });
     });
 
@@ -56,8 +56,8 @@ describe("Pointer", function () {
       var match = pointer.match("/bar#id=42");
 
       assert(match);
-      assert.strictEqual(match.hasAnchor, true);
-      assert.deepEqual(match.params, { id: "42" });
+      assert.notStrictEqual(match.anchorParams, null);
+      assert.deepEqual(match.anchorParams, { id: "42" });
     });
 
 

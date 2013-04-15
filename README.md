@@ -32,7 +32,8 @@ router.addRoute('/f{forum_id}(-{page}).html', {
 }, forum_list);
 
 // route with optional anchor (useful for in-browser use)
-router.addRoute('/page.html', 'anchor={keyword}', {
+router.addRoute('/page.html', {
+  anchor: 'anchor={keyword}',
   params: {
     keyword: /\S+/
   }

@@ -28,13 +28,36 @@ describe("Pointer", function () {
 
   describe("#match", function () {
     var pointer = new Pointer({
-      "/foo/{id}": { prefix: "//example.com" }
+      "/foo/{id}": {
+        prefix: "//example.com"
+      },
+      "/bar": {
+        anchor: "id={id}"
+      }
     });
 
 
     it("should respect prefix", function () {
       var match = pointer.match("//example.com/foo/42");
       assert.deepEqual(match && match.params, { id: "42" });
+    });
+
+
+    it("should ignore URL's anchor by default", function () {
+      var match = pointer.match("//example.com/foo/42#anchor");
+
+      assert(match);
+      assert.strictEqual(match.hasAnchor, false);
+      assert.deepEqual(match.params, { id: "42" });
+    });
+
+
+    it("should fetch params from anchor when expected", function () {
+      var match = pointer.match("/bar#id=42");
+
+      assert(match);
+      assert.strictEqual(match.hasAnchor, true);
+      assert.deepEqual(match.params, { id: "42" });
     });
 
 

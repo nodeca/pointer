@@ -20,7 +20,7 @@ router.addRoute('/foo/{bar}', {
   params: { bar: /\d+/ }
 }, foobar);
 
-// route wit optional param and it's default value
+// route with optional param and it's default value
 router.addRoute('/f{forum_id}(-{page}).html', {
   params: {
     forum_id: /\d+/
@@ -30,6 +30,13 @@ router.addRoute('/f{forum_id}(-{page}).html', {
     }
   }
 }, forum_list);
+
+// route with optional anchor (useful for in-browser use)
+router.addRoute('/page.html', 'anchor={keyword}', {
+  params: {
+    keyword: /\S+/
+  }
+}, page);
 
 // named router (used for linkTo)
 router.addRoute('/t{thread_id}', {

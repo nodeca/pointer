@@ -58,6 +58,38 @@ describe("Pointer.Route", function () {
     });
 
 
+    it("should match anchor if present", function () {
+      var route, match;
+
+      route = new Route("/foo(/{name})", "bar{id}", {
+        id: { match: /[0-9]+/ }
+      });
+
+      match = route.match("/foo/joe");
+      assert.deepEqual(match && match.params, { name: 'joe', id: undefined });
+
+      match = route.match("/foo/moe", "bar42");
+      assert.deepEqual(match && match.params, { name: 'moe', id: '42' });
+    });
+
+
+    it("should properly set `hasAnchor` property in match result", function () {
+      var route, match;
+
+      route = new Route("/foo(/{name})", "bar{id}", {
+        id: { match: /[0-9]+/ }
+      });
+
+      match = route.match("/foo/joe");
+      assert(match);
+      assert.strictEqual(match.hasAnchor, false);
+
+      match = route.match("/foo/moe", "bar42");
+      assert(match);
+      assert.strictEqual(match.hasAnchor, true);
+    });
+
+
     describe("when param is given as RegExp", function () {
       it("should be a shorthand to `match` option", function () {
         var route = new Route("/foo/{id}.html", { id: /[0-9]{2}/ });
@@ -134,6 +166,20 @@ describe("Pointer.Route", function () {
         slug: "the-answer",
         ext:  "html"
       }), "/foobar/42-the-answer.html");
+    });
+
+
+    it("should add anchor only when there are some params for it", function () {
+      var route = new Route("/foo/{name}", "bar{id}");
+
+      assert.deepEqual(route.buildURL({
+        name: "something"
+      }), "/foo/something");
+
+      assert.deepEqual(route.buildURL({
+        name: "something",
+        id:   42
+      }), "/foo/something#bar42");
     });
 
 

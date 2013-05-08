@@ -1,3 +1,9 @@
+0.1.4 / --
+------------------
+
+* Pointer#addRoute: pattern can be passed via options object.
+
+
 0.1.3 / 2013-04-05
 ------------------
 

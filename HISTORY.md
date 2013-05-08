@@ -2,6 +2,7 @@
 ------------------
 
 * Pointer#addRoute: pattern can be passed via options object.
+* Allow to add routes with multiple names.
 
 
 0.1.3 / 2013-04-05

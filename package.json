@@ -1,6 +1,6 @@
 {
   "name"            : "pointer",
-  "version"         : "0.1.3",
+  "version"         : "0.1.4",
   "description"     : "Client-Server router.",
   "keywords"        : ["router", "dispatcher"],
   "homepage"        : "https://github.com/nodeca/pointer",
@@ -18,6 +18,5 @@
                         "mocha"     : "*",
                         "jison"     : "~ 0.3.2",
                         "webmake"   : "~ 0.3.14"
-                      },
-  "engines"         : { "node": ">= 0.6.0" }
+                      }
 }

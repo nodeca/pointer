@@ -6,12 +6,12 @@ Pointer
 Server/Client router:
 http://nodeca.github.io/pointer/
 
-``` sh
+```
 npm install pointer
 ```
 
 To make client version:
-``` sh
+```
 make browserify
 ```
 

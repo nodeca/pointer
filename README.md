@@ -15,6 +15,9 @@ To make client version:
 make browserify
 ```
 
+You also need a modern browser or [es5-shims](https://github.com/kriskowal/es5-shim)
+to get it working.
+
 
 API Overview
 ------------

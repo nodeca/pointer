@@ -57,4 +57,30 @@ describe("Pointer", function () {
       });
     });
   });
+
+
+  describe("#matchAll", function () {
+    var pointer = new Pointer({
+      "/({word})":    { meta: 1 },
+      "/":            { meta: 2 },
+      "/hello/world": { meta: 3 }
+    });
+
+
+    it("should return an empty array if no routes are matched", function () {
+      var match = pointer.matchAll("/non/existent");
+
+      assert.strictEqual(Object.prototype.toString.call(match), '[object Array]');
+      assert.strictEqual(match.length, 0);
+    });
+
+
+    it("should match all suitable routes", function () {
+      var match = pointer.matchAll("/");
+
+      assert.strictEqual(Object.prototype.toString.call(match), '[object Array]');
+      assert.strictEqual(match.length, 2);
+      assert(match.every(function (data) { return 1 === data.meta || 2 === data.meta; }));
+    });
+  });
 });

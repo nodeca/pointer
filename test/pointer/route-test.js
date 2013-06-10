@@ -149,13 +149,24 @@ describe("Pointer.Route", function () {
       assert.deepEqual(route.buildURL({ id: 42 }), "//example.com/foobar/42");
     });
 
-    it("should override prefix parts if prefixOptions are previded", function () {
-      var route = new Route("/route", {}, {}, '//example.com/foo');
+    it("should fill-in missed prefix parts if prefixOptions are provided", function () {
+      var route1 = new Route("/route", {}, {}, '//example.com/foo'),
+          route2 = new Route("/route", {}, {}, ''),
+          prefixOptions = {
+            protocol: 'https',
+            hostname: 'github.com',
+            port:     8080,
+            pathname: '/hello/world'
+          };
 
-      assert.strictEqual(route.buildURL(), '//example.com/foo/route');
-      assert.strictEqual(route.buildURL(null, { protocol: 'https', port: 8080 }), 'https://example.com:8080/foo/route');
-      assert.strictEqual(route.buildURL(null, { hostname: 'github.com'        }), '//github.com/foo/route');
-      assert.strictEqual(route.buildURL(null, { pathname: '/bar'              }), '//example.com/bar/route');
+      assert.strictEqual(route1.buildURL(),
+                         '//example.com/foo/route');
+
+      assert.strictEqual(route1.buildURL(null, prefixOptions),
+                         'https://example.com:8080/foo/route');
+
+      assert.strictEqual(route2.buildURL(null, prefixOptions),
+                         'https://github.com:8080/hello/world/route');
     });
   });
 });

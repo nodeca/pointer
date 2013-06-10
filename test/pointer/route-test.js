@@ -148,5 +148,14 @@ describe("Pointer.Route", function () {
       var route = new Route("/foobar/{id}", {}, {}, "//example.com");
       assert.deepEqual(route.buildURL({ id: 42 }), "//example.com/foobar/42");
     });
+
+    it("should override prefix parts if prefixOptions are previded", function () {
+      var route = new Route("/route", {}, {}, '//example.com/foo');
+
+      assert.strictEqual(route.buildURL(), '//example.com/foo/route');
+      assert.strictEqual(route.buildURL(null, { protocol: 'https', port: 8080 }), 'https://example.com:8080/foo/route');
+      assert.strictEqual(route.buildURL(null, { hostname: 'github.com'        }), '//github.com/foo/route');
+      assert.strictEqual(route.buildURL(null, { pathname: '/bar'              }), '//example.com/bar/route');
+    });
   });
 });

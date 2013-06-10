@@ -1,7 +1,7 @@
 0.1.6 / --
 ------------------
 
-* Add ability to override parts of URL prefix (protocol etc) via `linkTo`.
+* Add ability to fill-in missed parts of URL prefix (protocol etc) via `linkTo`.
 
 
 0.1.5 / 2013-05-13

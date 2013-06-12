@@ -149,10 +149,10 @@ describe("Pointer.Route", function () {
       assert.deepEqual(route.buildURL({ id: 42 }), "//example.com/foobar/42");
     });
 
-    it("should fill-in missed prefix parts if prefixOptions are provided", function () {
+    it("should fill-in missed prefix parts if linkDefaults are provided", function () {
       var route1 = new Route("/route", {}, {}, '//example.com/foo'),
           route2 = new Route("/route", {}, {}, ''),
-          prefixOptions = {
+          linkDefaults = {
             protocol: 'https',
             hostname: 'github.com',
             port:     8080,
@@ -162,10 +162,10 @@ describe("Pointer.Route", function () {
       assert.strictEqual(route1.buildURL(),
                          '//example.com/foo/route');
 
-      assert.strictEqual(route1.buildURL(null, prefixOptions),
+      assert.strictEqual(route1.buildURL(null, linkDefaults),
                          'https://example.com:8080/foo/route');
 
-      assert.strictEqual(route2.buildURL(null, prefixOptions),
+      assert.strictEqual(route2.buildURL(null, linkDefaults),
                          'https://github.com:8080/hello/world/route');
     });
   });

@@ -80,6 +80,19 @@ router.linkTo('thread.list', {
 
 
 //
+// Build links with filling of missed parts.
+//
+
+router.linkTo('page', { id: 13 }) // -> '//domain.com/page/13'
+
+router.linkTo('page', { id: 13 }, {
+  protocol: 'http',
+  hostname: 'defaultdomain.com',
+  port:     3000
+}) // -> 'http://domain.com:3000/page/13'
+
+
+//
 // find matching route
 //
 

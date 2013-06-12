@@ -1,4 +1,4 @@
-0.1.6 / --
+0.1.6 / 2013-06-12
 ------------------
 
 * Add ability to fill-in missed parts of URL prefix (protocol etc) via `linkTo`.

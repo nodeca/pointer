@@ -155,8 +155,7 @@ describe("Pointer.Route", function () {
           linkDefaults = {
             protocol: 'https',
             hostname: 'github.com',
-            port:     8080,
-            pathname: '/hello/world'
+            port:     8080
           };
 
       assert.strictEqual(route1.buildURL(),
@@ -166,7 +165,7 @@ describe("Pointer.Route", function () {
                          'https://example.com:8080/foo/route');
 
       assert.strictEqual(route2.buildURL(null, linkDefaults),
-                         'https://github.com:8080/hello/world/route');
+                         'https://github.com:8080/route');
     });
   });
 });

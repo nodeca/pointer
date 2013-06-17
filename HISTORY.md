@@ -1,4 +1,4 @@
-0.1.7 / --
+0.1.7 / 2013-06-17
 ------------------
 
 * Prevent exceptions on invalid URL format.

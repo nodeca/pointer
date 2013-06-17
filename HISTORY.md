@@ -1,7 +1,7 @@
 0.1.7 / --
 ------------------
 
-* Prevent URIError while decoding URL with escaped invalid UTF-8 codes.
+* Prevent exceptions on invalid URL format.
 
 
 0.1.6 / 2013-06-12

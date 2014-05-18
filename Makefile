@@ -8,7 +8,7 @@ TMP_PATH    := /tmp/${NPM_PACKAGE}-$(shell date +%s)
 REMOTE_NAME ?= origin
 REMOTE_REPO ?= $(shell git config --get remote.${REMOTE_NAME}.url)
 
-CURR_HEAD   := $(firstword $(shell git show-ref --hash HEAD | cut --bytes=-6) master)
+CURR_HEAD   := $(firstword $(shell git show-ref --hash HEAD | cut -b -6) master)
 GITHUB_PROJ := nodeca/${NPM_PACKAGE}
 
 
@@ -19,7 +19,6 @@ help:
 	echo "make doc        - Build API docs"
 	echo "make gh-pages   - Build and push API docs into gh-pages branch"
 	echo "make publish    - Set new version tag and publish npm package"
-	echo "make todo       - Find and list all TODOs"
 
 
 lint:
@@ -64,7 +63,7 @@ gh-pages:
 		git commit -q -m 'Recreated docs'
 	cd ${TMP_PATH} && \
 		git remote add remote ${REMOTE_REPO} && \
-		git push --force remote +master:gh-pages 
+		git push --force remote +master:gh-pages
 	rm -rf ${TMP_PATH}
 
 
@@ -85,12 +84,8 @@ publish:
 	npm publish https://github.com/${GITHUB_PROJ}/tarball/${NPM_VERSION}
 
 
-todo:
-	grep 'TODO' -n -r ./lib 2>/dev/null || test true
-
-
-.PHONY: compile-parser publish lint test doc gh-pages todo
-.SILENT: help lint test doc todo
+.PHONY: compile-parser publish lint test doc gh-pages
+.SILENT: help lint test doc
 
 
 compile-parser:
@@ -100,4 +95,4 @@ compile-parser:
 		exit 128 ; \
 		fi
 	jison src/pointer.yy src/pointer.l -o lib/pointer/route/parser.js -m js
-	echo -e "\nmodule.exports = { parser: parser };" >> lib/pointer/route/parser.js
+	echo "\nmodule.exports = { parser: parser };" >> lib/pointer/route/parser.js

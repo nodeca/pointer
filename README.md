@@ -1,7 +1,7 @@
 Pointer
 =======
 
-[![Build Status](https://secure.travis-ci.org/nodeca/pointer.png)](http://travis-ci.org/nodeca/pointer)
+[![Build Status](https://travis-ci.org/nodeca/pointer.svg?branch=master)](https://travis-ci.org/nodeca/pointer)
 
 Server/Client router:
 http://nodeca.github.io/pointer/

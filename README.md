@@ -30,7 +30,10 @@ API Overview
 
 // simple case
 router.addRoute('/foo/{bar}', {
-  params: { bar: /\d+/ },
+  params: {
+    bar: /\d+/,
+    type: 'integer' /* coerce result to int (string by default) */
+  },
   meta: /* any data you want */
 });
 

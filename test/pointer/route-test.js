@@ -57,6 +57,13 @@ describe("Pointer.Route", function () {
       testMatch(route, "/foo/123.html",  null);
     });
 
+    it("should coerce integers", function () {
+      var route = new Route("/foo/{id}.html", {
+        id: { type: 'integer' }
+      });
+
+      assert.strictEqual(route.match('/foo/42.html').params.id, 42);
+    });
 
     describe("when param is given as RegExp", function () {
       it("should be a shorthand to `match` option", function () {

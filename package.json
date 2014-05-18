@@ -17,7 +17,6 @@
   "devDependencies" : {
                         "mocha"     : "*",
                         "jshint"    : "*",
-                        "jison"     : "~ 0.3.2",
-                        "webmake"   : "~ 0.3.14"
+                        "jison"     : "~ 0.3.2"
                       }
 }

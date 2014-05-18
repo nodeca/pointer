@@ -101,13 +101,3 @@ compile-parser:
 		fi
 	jison src/pointer.yy src/pointer.l -o lib/pointer/route/parser.js -m js
 	echo -e "\nmodule.exports = { parser: parser };" >> lib/pointer/route/parser.js
-
-
-browserify:
-	@if test ! `which webmake` ; then \
-		echo "You need 'webmake' installed in order to generate browserified version." >&2 ; \
-		echo "  $ npm install -g webmake" >&2 ; \
-		exit 128 ; \
-		fi
-	rm -rf browser && mkdir browser
-	webmake --name 'Pointer' ./lib/pointer.js ./browser/pointer.js

@@ -15,13 +15,19 @@ describe('Pointer', function () {
   describe('#linkTo', function () {
     var pointer = new Pointer({
       '/foo/{id}/index.html': { name: 'foo', params: { id: /\d+?/ } },
-      '/bar/index.html':      { name: 'bar' }
+      '/bar/index.html':      { name: 'bar' },
+      '/baz(/{id})':          { name: 'baz', params: { id: /\d+?/ } }
     });
 
 
     it('should respect name', function () {
       assert.deepEqual(pointer.linkTo('foo', {}), null);
       assert.deepEqual(pointer.linkTo('foo', { id: 42 }), '/foo/42/index.html');
+    });
+
+    it('should works without params', function () {
+      assert.deepEqual(pointer.linkTo('baz'), '/baz');
+      assert.deepEqual(pointer.linkTo('baz', { id: 17 }), '/baz/17');
     });
   });
 

@@ -104,4 +104,14 @@ if (match) {
   match.params; // object with params, e.g. {id: 123, page: undefined}
   match.meta;   // your custom data
 }
+
+
+//
+// Dump routes to "executable" string for client asset.
+// Needed to keep regexps properly.
+//
+
+console.log(router.stringify());
+
+var clientRouter = new Pointer(router.stringify());
 ```

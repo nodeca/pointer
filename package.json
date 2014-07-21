@@ -1,7 +1,7 @@
 {
   "name"            : "pointer",
-  "version"         : "0.1.9",
-  "description"     : "Client-Server router.",
+  "version"         : "0.2.0",
+  "description"     : "Universal client and server router.",
   "keywords"        : ["router", "dispatcher"],
   "homepage"        : "https://github.com/nodeca/pointer",
 

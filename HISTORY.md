@@ -1,9 +1,10 @@
-0.2.0 / 2014-07-21
+0.2.0 / 2014-07-22
 ------------------
 
-- Deprecated `create()` method.
 - Added `config` property (Array), that store added routes in original form.
-- Constructor now accepts array of routes
+- Added `stringify()` method to dump router content for client asset.
+- Constructor now accepts array of routes.
+- Deprecated `create()` method.
 
 
 0.1.8 / 2014-05-19

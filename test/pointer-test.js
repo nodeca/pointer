@@ -12,6 +12,36 @@ var Pointer = require('..');
 
 
 describe('Pointer', function () {
+
+  describe('constructor', function () {
+
+    it('should accept Object', function () {
+      var pointer = new Pointer({
+        '123': { name: 'foo' },
+        '456': {}
+      });
+
+      assert.deepEqual(pointer.config, [
+        { name: 'foo', pattern: '123' },
+        { pattern: '456'}
+      ]);
+    });
+
+    it('should accept Array', function () {
+      var pointer = new Pointer([
+        { name: 'foo', pattern: '123' },
+        { pattern: '456'}
+      ]);
+
+      assert.deepEqual(pointer.config, [
+        { name: 'foo', pattern: '123' },
+        { pattern: '456'}
+      ]);
+    });
+
+  });
+
+
   describe('#linkTo', function () {
     var pointer = new Pointer({
       '/foo/{id}/index.html': { name: 'foo', params: { id: /\d+?/ } },

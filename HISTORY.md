@@ -1,7 +1,9 @@
-0.1.9 / 2014-06-06
+0.2.0 / 2014-07-21
 ------------------
 
-- Fixed `linkTo()` call without link params.
+- Deprecated `create()` method.
+- Added `config` property (Array), that store added routes in original form.
+- Constructor now accepts array of routes
 
 
 0.1.8 / 2014-05-19

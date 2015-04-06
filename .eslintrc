@@ -21,7 +21,7 @@ rules:
   func-style:             [ 2, declaration ]
   handle-callback-err:    2
   # key-spacing:            [ 2, { "align": "value" } ]
-  max-depth:              [ 1, 4 ]
+  max-depth:              [ 1, 6 ]
   max-nested-callbacks:   [ 1, 5 ]
   # string can exceed 80 chars, but should not overflow github website :)
   max-len:                [ 2, 120, 1000 ]

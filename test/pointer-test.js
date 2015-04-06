@@ -46,7 +46,9 @@ describe('Pointer', function () {
     var pointer = new Pointer({
       '/foo/{id}/index.html': { name: 'foo', params: { id: /\d+?/ } },
       '/bar/index.html':      { name: 'bar' },
-      '/baz(/{id})':          { name: 'baz', params: { id: /\d+?/ } }
+      '/baz(/{id})':          { name: 'baz', params: { id: /\d+?/ } },
+      '/quux(/one{p1})':      { name: 'quux', params: { p1: /\d+?/ } },
+      '/quux(/two{p2})':      { name: 'quux', params: { p2: /\d+?/ } }
     });
 
 
@@ -58,6 +60,17 @@ describe('Pointer', function () {
     it('should works without params', function () {
       assert.deepEqual(pointer.linkTo('baz'), '/baz');
       assert.deepEqual(pointer.linkTo('baz', { id: 17 }), '/baz/17');
+    });
+
+    it('should support multiple routes with the same name', function () {
+      assert.deepEqual(pointer.linkTo('quux'), '/quux');
+      assert.deepEqual(pointer.linkTo('quux', { p1: 1 }), '/quux/one1');
+      assert.deepEqual(pointer.linkTo('quux', { p2: 2 }), '/quux/two2');
+    });
+
+    it('should pick longest url if multiple choices are available', function () {
+      assert.deepEqual(pointer.linkTo('quux', { p1: 1337, p2: 2 }), '/quux/one1337');
+      assert.deepEqual(pointer.linkTo('quux', { p1: 1, p2: 1337 }), '/quux/two1337');
     });
   });
 

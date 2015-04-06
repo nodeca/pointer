@@ -17,25 +17,25 @@ describe('Pointer', function () {
 
     it('should accept Object', function () {
       var pointer = new Pointer({
-        '123': { name: 'foo' },
-        '456': {}
+        123: { name: 'foo' },
+        456: {}
       });
 
       assert.deepEqual(pointer.config, [
         { name: 'foo', pattern: '123' },
-        { pattern: '456'}
+        { pattern: '456' }
       ]);
     });
 
     it('should accept Array', function () {
       var pointer = new Pointer([
         { name: 'foo', pattern: '123' },
-        { pattern: '456'}
+        { pattern: '456' }
       ]);
 
       assert.deepEqual(pointer.config, [
         { name: 'foo', pattern: '123' },
-        { pattern: '456'}
+        { pattern: '456' }
       ]);
     });
 
@@ -129,7 +129,7 @@ describe('Pointer', function () {
 
       assert.strictEqual(Object.prototype.toString.call(match), '[object Array]');
       assert.strictEqual(match.length, 2);
-      assert(match.every(function (data) { return 1 === data.meta || 2 === data.meta; }));
+      assert(match.every(function (data) { return data.meta === 1 || data.meta === 2; }));
     });
   });
 });

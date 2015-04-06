@@ -12,12 +12,12 @@ var Compiler  = require('../../../lib/pointer/route/compiler');
 
 
 // map of node type simplification
-var NODES = {string: 's', param: 'p'};
+var NODES = { string: 's', param: 'p' };
 
 
 // maps compiled ast into array of strings representing nodes
 function mapNodes(node) {
-  if ('optional' === node.type) {
+  if (node.type === 'optional') {
     return node.nodes.map(mapNodes);
   }
 
@@ -43,17 +43,17 @@ function testCompiler(route, expectedNodes) {
 
 describe('Pointer.Route.Compiler', function () {
   testCompiler('',                        []);
-  testCompiler('/foo',                    ['s']);
-  testCompiler('/foo/{bar}',              ['s', 'p']);
-  testCompiler('/foo(/{bar})',            ['s', ['s', 'p']]);
-  testCompiler('/foo/{bar}(/({baz}moo))', ['s', 'p', ['s', ['p', 's']]]);
+  testCompiler('/foo',                    [ 's' ]);
+  testCompiler('/foo/{bar}',              [ 's', 'p' ]);
+  testCompiler('/foo(/{bar})',            [ 's', [ 's', 'p' ] ]);
+  testCompiler('/foo/{bar}(/({baz}moo))', [ 's', 'p', [ 's', [ 'p', 's' ] ] ]);
 
   // escaping
 
-  testCompiler('/foo\\{bar}',           ['s', 's', 's', 's']);
-  testCompiler('/foo{bar\\}baz}',       ['s', 'p']);
-  testCompiler('/foo\\(bar)',           ['s', 's', 's', 's']);
-  testCompiler('/foo(bar\\)baz)',       ['s', ['s', 's', 's']]);
-  testCompiler('/foo(bar\\)(baz)moo)',  ['s', ['s', 's', ['s'], 's']]);
-  testCompiler('/foo/\\({b}(-{a}\\))r', ['s', 's', 'p', ['s', 'p', 's'], 's']);
+  testCompiler('/foo\\{bar}',           [ 's', 's', 's', 's' ]);
+  testCompiler('/foo{bar\\}baz}',       [ 's', 'p' ]);
+  testCompiler('/foo\\(bar)',           [ 's', 's', 's', 's' ]);
+  testCompiler('/foo(bar\\)baz)',       [ 's', [ 's', 's', 's' ] ]);
+  testCompiler('/foo(bar\\)(baz)moo)',  [ 's', [ 's', 's', [ 's' ], 's' ] ]);
+  testCompiler('/foo/\\({b}(-{a}\\))r', [ 's', 's', 'p', [ 's', 'p', 's' ], 's' ]);
 });

@@ -43,7 +43,7 @@ describe('Pointer.Route', function () {
     it('should allow omit optional groups', function () {
       var route = new Route('/{id}(-{slug})');
 
-      testMatch(route, '/42',     { id: '42', slug: undefined });
+      testMatch(route, '/42',     { id: '42', slug: void 0 });
       testMatch(route, '/42-bar', { id: '42', slug: 'bar' });
     });
 
@@ -77,7 +77,7 @@ describe('Pointer.Route', function () {
 
     it('allows specify default value of params', function () {
       var route = new Route('/foo/{id}(.{format})', {
-        format: { default: 'html' }
+        format: { 'default': 'html' }
       });
 
       testMatch(route, '/foo/42',       { id: '42', format: 'html' });

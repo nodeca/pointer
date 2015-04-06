@@ -1,6 +1,0 @@
-.git/
-doc/
-node_modules/
-browser/
-tmp/
-lib/pointer/route/parser.js

@@ -5,7 +5,7 @@
 
 
 var assert = require('assert');
-var URL    = require('../lib/pointer/url');
+var url    = require('../lib/pointer/url');
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@ var URL    = require('../lib/pointer/url');
 
 describe('Pointer.URL', function () {
   it('should allow omit protocol', function () {
-    var parsed = URL('//example.com/index.html');
+    var parsed = url('//example.com/index.html');
 
     assert.equal('/index.html', parsed.attr('path'));
     assert.equal('example.com', parsed.attr('host'));
@@ -22,7 +22,7 @@ describe('Pointer.URL', function () {
 
 
   it('should allow omit host part', function () {
-    var parsed = URL('/index.html');
+    var parsed = url('/index.html');
 
     assert.equal('/index.html', parsed.attr('path'));
     assert.equal('',            parsed.attr('host'));
@@ -31,7 +31,7 @@ describe('Pointer.URL', function () {
 
 
   it('should remove auth part from host', function () {
-    var parsed = URL('http://ixti:1234@example.com/');
+    var parsed = url('http://ixti:1234@example.com/');
 
     assert.equal('ixti',        parsed.attr('user'));
     assert.equal('1234',        parsed.attr('password'));
@@ -42,7 +42,7 @@ describe('Pointer.URL', function () {
   // excessive test to make sure we have all parts correctly extracted
   // TODO: Replace with normal tests, testing edge cases?
   it('should correctly parse all URI parts', function () {
-    var parsed = URL('http://user:pass@example.com/path.html?key=val#anchor');
+    var parsed = url('http://user:pass@example.com/path.html?key=val#anchor');
 
     assert.equal('http',        parsed.attr('protocol'));
     assert.equal('user',        parsed.attr('user'));

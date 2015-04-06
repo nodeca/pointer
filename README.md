@@ -1,10 +1,13 @@
 Pointer
 =======
 
-[![Build Status](https://travis-ci.org/nodeca/pointer.svg?branch=master)](https://travis-ci.org/nodeca/pointer)
+[![Build Status](https://img.shields.io/travis/nodeca/pointer/master.svg?style=flat)](https://travis-ci.org/markdown-it/markdown-it)
+[![NPM version](https://img.shields.io/npm/v/pointer.svg?style=flat)](https://www.npmjs.org/package/markdown-it)
 
-Server/Client router:
-http://nodeca.github.io/pointer/
+> Server/Client router:
+
+API docs: http://nodeca.github.io/pointer/
+
 
 ```
 npm install pointer

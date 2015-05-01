@@ -48,7 +48,8 @@ describe('Pointer', function () {
       '/bar/index.html':      { name: 'bar' },
       '/baz(/{id})':          { name: 'baz', params: { id: /\d+?/ } },
       '/quux(/one{p1})':      { name: 'quux', params: { p1: /\d+?/ } },
-      '/quux(/two{p2})':      { name: 'quux', params: { p2: /\d+?/ } }
+      '/quux(/two{p2})':      { name: 'quux', params: { p2: /\d+?/ } },
+      '/quux/three{p3}':      { name: 'quux', params: { p2: /\d+?/ } }
     });
 
 
@@ -66,6 +67,7 @@ describe('Pointer', function () {
       assert.deepEqual(pointer.linkTo('quux'), '/quux');
       assert.deepEqual(pointer.linkTo('quux', { p1: 1 }), '/quux/one1');
       assert.deepEqual(pointer.linkTo('quux', { p2: 2 }), '/quux/two2');
+      assert.deepEqual(pointer.linkTo('quux', { p3: 3 }), '/quux/three3');
     });
 
     it('should pick longest url if multiple choices are available', function () {

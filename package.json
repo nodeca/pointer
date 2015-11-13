@@ -8,18 +8,12 @@
   ],
   "homepage": "https://github.com/nodeca/pointer",
   "author": "Aleksey V Zapparov <ixti@member.fsf.org> (http://ixti.net/)",
-  "bugs": {
-    "url": "https://github.com/nodeca/pointer/issues"
-  },
-  "license": {
-    "type": "MIT",
-    "url": "https://github.com/nodeca/pointer/blob/master/LICENSE"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/nodeca/pointer.git"
-  },
-  "main": "./index.js",
+  "license": "MIT",
+  "repository": "nodeca/pointer",
+  "files": [
+    "index.js",
+    "lib/"
+  ],
   "scripts": {
     "test": "make test"
   },
@@ -27,6 +21,7 @@
     "eslint": "0.18.0",
     "eslint-plugin-nodeca": "~ 1.0.3",
     "mocha": "*",
+    "ndoc": "^3.1.0",
     "jison": "~ 0.3.2"
   }
 }

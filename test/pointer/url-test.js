@@ -14,4 +14,8 @@ describe('Pointer.URL', function () {
     // So this is a malformed URI and internal decodeURI will throw on it.
     assert.doesNotThrow(function () { url('http://example.com/%AF'); }, URIError);
   });
+
+  it('must not throw on incorrect querystring', function () {
+    assert.doesNotThrow(function () { url('http://example.com/?[]&test=1'); });
+  });
 });

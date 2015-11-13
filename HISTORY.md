@@ -1,3 +1,9 @@
+0.3.2 / 2015-11-13
+------------------
+
+- Fixed crash on "invalid" query sequence (`http://example.com/?[]&test=1`).
+
+
 0.3.1 / 2015-05-01
 ------------------
 

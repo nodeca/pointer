@@ -39,6 +39,18 @@ describe('Pointer', function () {
       ]);
     });
 
+    it('should allow skip "new"', function () {
+      /*eslint-disable new-cap*/
+      var pointer = Pointer([
+        { name: 'foo', pattern: '123' }
+      ]);
+
+      assert.deepEqual(pointer.config, [
+        { name: 'foo', pattern: '123' }
+      ]);
+    });
+
+
   });
 
 

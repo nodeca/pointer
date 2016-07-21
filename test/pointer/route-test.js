@@ -4,8 +4,9 @@
 'use strict';
 
 
-var assert  = require('assert');
-var Route   = require('../../lib/pointer/route');
+var assert   = require('assert');
+var Route    = require('../../lib/pointer/route');
+var parseURL = require('../../lib/pointer').parseURL;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,12 +153,12 @@ describe('Pointer.Route', function () {
 
 
     it('should preserve prefix', function () {
-      var route = new Route('/foobar/{id}', {}, {}, '//example.com');
+      var route = new Route('/foobar/{id}', {}, {}, '//example.com', parseURL);
       assert.deepEqual(route.buildURL({ id: 42 }), '//example.com/foobar/42');
     });
 
     it('should fill-in missed prefix parts if linkDefaults are provided', function () {
-      var route1 = new Route('/route', {}, {}, '//example.com/foo'),
+      var route1 = new Route('/route', {}, {}, '//example.com/foo', parseURL),
           route2 = new Route('/route', {}, {}, ''),
           linkDefaults = {
             protocol: 'https',

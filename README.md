@@ -27,6 +27,11 @@ API Overview
 
 
 ``` javascript
+let url = require('url');
+
+// override internal parser with node's one
+let router = require('pointer')(null, u => url.parse(u, false, true));
+
 //
 // fill in routes
 //
@@ -102,7 +107,8 @@ router.linkTo('page', { id: 13 }, {
 // find matching route
 //
 
-var match = router.match(url);
+let match = router.match(url);
+
 if (match) {
   match.params; // object with params, e.g. {id: 123, page: undefined}
   match.meta;   // your custom data
@@ -116,5 +122,5 @@ if (match) {
 
 console.log(router.stringify());
 
-var clientRouter = new Pointer(router.stringify());
+const clientRouter = new Pointer(router.stringify());
 ```

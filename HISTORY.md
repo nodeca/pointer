@@ -1,3 +1,10 @@
+1.0.0 / 2016-07-22
+------------------
+
+- Make internal parser compatible with node's `require('url').parser`.
+- Allow use node's parser instead of built-in.
+
+
 0.3.3 / 2016-01-13
 ------------------
 

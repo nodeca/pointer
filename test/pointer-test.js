@@ -103,7 +103,7 @@ describe('Pointer', function () {
 
     // issue#2: https://github.com/nodeca/pointer/issues/2
     describe('with similar routes', function () {
-      var pointer = new Pointer({
+      var p = new Pointer({
         '/tests(/{a}(/{b}(/{c}(/{d}))))': { meta: 'uno' },
         '/tests/{a}/{b}/{c}/fun(/{d})':   { meta: 'dos' }
       });
@@ -112,10 +112,10 @@ describe('Pointer', function () {
       it('should find correct route', function () {
         var match;
 
-        match = pointer.match('/tests/pluto');
+        match = p.match('/tests/pluto');
         assert.equal(match && match.meta, 'uno');
 
-        match = pointer.match('/tests/1/2/3/fun');
+        match = p.match('/tests/1/2/3/fun');
         assert.equal(match && match.meta, 'dos');
       });
     });

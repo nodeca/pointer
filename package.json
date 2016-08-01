@@ -1,6 +1,6 @@
 {
   "name": "pointer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Universal client and server router.",
   "keywords": [
     "router",

@@ -1,3 +1,11 @@
+1.0.1 / 2016-08-01
+------------------
+
+- Workaround for node's external parser (it adds `/` for empty paths).
+- Edge case fix: domain root without trailing `/` should
+  be recognized.
+
+
 1.0.0 / 2016-07-22
 ------------------
 

@@ -5,6 +5,7 @@
 
 
 var assert  = require('assert');
+var url     = require('url');
 var Pointer = require('..');
 
 
@@ -91,6 +92,7 @@ describe('Pointer', function () {
 
   describe('#match', function () {
     var pointer = new Pointer({
+      '/':         { prefix: '//example.com', meta: 'root' },
       '/foo/{id}': { prefix: '//example.com' }
     });
 
@@ -98,6 +100,46 @@ describe('Pointer', function () {
     it('should respect prefix', function () {
       var match = pointer.match('//example.com/foo/42');
       assert.deepEqual(match && match.params, { id: '42' });
+    });
+
+
+    it('should match root without trailing slash', function () {
+      var match = pointer.match('//example.com');
+      assert.deepEqual(match && match.meta, 'root');
+    });
+
+
+    it('should match root with trailing slash', function () {
+      var match = pointer.match('//example.com/');
+      assert.deepEqual(match && match.meta, 'root');
+    });
+
+
+    it('should alias "" to "/" if there is no path in prefix', function () {
+      var p, match;
+
+      p = new Pointer({
+        '': { prefix: '//example.com', meta: 'test' }
+      });
+
+      match = p.match('//example.com');
+      assert.deepEqual(match && match.meta, 'test');
+      match = p.match('//example.com/');
+      assert.deepEqual(match && match.meta, 'test');
+    });
+
+
+    it('should not alias "" to "/" if there is a path in prefix', function () {
+      var p, match;
+
+      p = new Pointer({
+        '': { prefix: '//example.com/foo', meta: 'test' }
+      });
+
+      match = p.match('//example.com/foo');
+      assert.deepEqual(match && match.meta, 'test');
+      match = p.match('//example.com/foo/');
+      assert.deepEqual(match, null);
     });
 
 
@@ -117,6 +159,35 @@ describe('Pointer', function () {
 
         match = p.match('/tests/1/2/3/fun');
         assert.equal(match && match.meta, 'dos');
+      });
+    });
+
+
+    describe('with custom url parser', function () {
+      function url_parse(u) { return url.parse(u, false, true); }
+
+      it('should accept custom parser', function () {
+        var p = new Pointer({
+          '/foo/{id}': {}
+        }, url_parse);
+
+        var match = p.match('http://example.com/foo/42');
+        assert.deepEqual(match && match.params, { id: '42' });
+      });
+
+
+      it('should work with prefix', function () {
+        var p = new Pointer({
+          '/':         { prefix: 'http://example.com', meta: 'root' },
+          '/foo/{id}': { prefix: 'http://example.com', meta: 'foo' }
+        }, url_parse);
+        var match;
+
+        match = p.match('http://example.com/');
+        assert.deepEqual(match && match.meta, 'root');
+
+        match = p.match('http://example.com/foo/42');
+        assert.deepEqual(match && match.meta, 'foo');
       });
     });
   });
